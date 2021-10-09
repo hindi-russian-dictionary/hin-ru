@@ -1,9 +1,23 @@
 import React from "react";
-import { getPartsOfSpeech, getPropertiesForPartOfSpeech } from "../utils";
-import Database from "../db";
+import firebase from "firebase/compat";
 
-class WordPage extends React.Component {
-  constructor(props) {
+import { getPartsOfSpeech, getPropertiesForPartOfSpeech } from "utils";
+import Database, { Article } from "db";
+
+type Props = {
+  word: firebase.firestore.DocumentSnapshot<Article>;
+  isAdmin: boolean;
+  routeToEdit: () => void;
+};
+
+type State = {
+  isWordApproved: boolean;
+};
+
+class WordPage extends React.Component<Props, State> {
+  database: Database;
+
+  constructor(props: Props) {
     super(props);
     this.database = new Database();
     this.state = { isWordApproved: props.word.get("approved") };
@@ -53,7 +67,13 @@ class WordPage extends React.Component {
           <tbody>
             <tr>
               <th>Часть речи</th>
-              <td>{getPartsOfSpeech()[word.get("part_of_speech")]}</td>
+              <td>
+                {
+                  getPartsOfSpeech()[
+                    word.get("part_of_speech") as Article["part_of_speech"]
+                  ]
+                }
+              </td>
             </tr>
             <tr>
               <th>Транслитерация</th>
@@ -88,12 +108,14 @@ class WordPage extends React.Component {
               <td>
                 <table className="table">
                   <tbody>
-                    {word.get("meanings").map((meaning) => (
-                      <tr key={meaning.meaning}>
-                        <td>{meaning.meaning}</td>
-                        <td>{meaning.examples}</td>
-                      </tr>
-                    ))}
+                    {(word.get("meanings") as Article["meanings"]).map(
+                      (meaning) => (
+                        <tr key={meaning.meaning}>
+                          <td>{meaning.meaning}</td>
+                          <td>{meaning.examples}</td>
+                        </tr>
+                      )
+                    )}
                   </tbody>
                 </table>
               </td>

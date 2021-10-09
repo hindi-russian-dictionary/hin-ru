@@ -1,4 +1,38 @@
 import firebase from "firebase/compat";
+import { PartOfSpeech } from "utils";
+
+export type Article = {
+  word: string;
+  transliteration: string;
+  spellings: string[];
+  part_of_speech: PartOfSpeech;
+  meanings: {
+    meaning: string;
+    examples: string;
+  }[];
+  properties: Record<string, Record<string, boolean>>;
+  taken_from: string;
+  control: {
+    rus: string;
+    hin: string;
+  };
+  stable_phrases: {
+    rus: string;
+    hin: string;
+  };
+  examples: {
+    rus: string;
+    hin: string;
+  };
+  status: "draft";
+  author?: string;
+  approved?: boolean;
+};
+
+type User = {
+  admin: boolean;
+  moderator: boolean;
+};
 
 class Database {
   constructor() {
@@ -21,19 +55,26 @@ class Database {
     }
   }
 
-  saveWord(word) {
+  async saveWord(word: Article): Promise<void> {
     const db = firebase.firestore();
-    return db.collection("articles").add(word);
+    await db.collection("articles").add(word);
   }
 
-  updateWord(word_id, word) {
+  async updateWord(word_id: string, word: Partial<Article>): Promise<void> {
     const db = firebase.firestore();
-    return db.collection("articles").doc(word_id).update(word);
+    await db.collection("articles").doc(word_id).update(word);
   }
 
-  searchWords(lookup, isAdmin) {
+  async searchWords(
+    lookup: string,
+    isAdmin: boolean
+  ): Promise<firebase.firestore.Query<Article>> {
     const db = firebase.firestore();
-    let collection = db.collection("articles").orderBy("word");
+    let collection = (
+      db.collection(
+        "articles"
+      ) as firebase.firestore.CollectionReference<Article>
+    ).orderBy("word");
     if (!isAdmin) {
       collection = collection.where("approved", "==", true);
     }
@@ -43,22 +84,25 @@ class Database {
       .limit(15);
   }
 
-  fetchUserAdmin(user, setAdminCallback) {
+  async fetchUserAdmin(
+    user: firebase.User,
+    setAdminCallback: (isAdmin: boolean) => void
+  ): Promise<void> {
     const db = firebase.firestore();
     db.collection("users")
-      .doc(user.email)
+      .doc(user.email || undefined)
       .get()
       .then(function (doc) {
         if (doc.exists) {
-          setAdminCallback(doc.data().admin);
+          setAdminCallback((doc.data() as User).admin);
         } else {
           db.collection("users")
-            .doc(user.email)
+            .doc(user.email || undefined)
             .set({
               admin: false,
               moderator: false,
             })
-            .then((result) => setAdminCallback(false));
+            .then(() => setAdminCallback(false));
         }
       });
   }

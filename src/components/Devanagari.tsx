@@ -1,6 +1,6 @@
 import React from "react";
 
-const symbols = [
+const symbols: string[][] = [
   [
     "ऀ",
     "ँ",
@@ -147,8 +147,20 @@ const symbols = [
   ],
 ];
 
-class DevanagariTextInput extends React.Component {
-  constructor(props) {
+type Props = {
+  defaultValue: string;
+  placeholder: string;
+  setValue: (nextValue: string) => void;
+};
+
+type State = {
+  value: string;
+};
+
+class DevanagariTextInput extends React.Component<Props, State> {
+  setValue: (nextValue: string) => void;
+
+  constructor(props: Props) {
     super(props);
     this.setValue = props.setValue;
     this.state = { value: props.defaultValue };
@@ -161,6 +173,7 @@ class DevanagariTextInput extends React.Component {
           <input
             type="text"
             className="form-control"
+            placeholder={this.props.placeholder}
             value={this.state.value}
             onChange={(evt) => {
               this.setState({ value: evt.target.value });

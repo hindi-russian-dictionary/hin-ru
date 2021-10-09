@@ -1,10 +1,44 @@
 import React from "react";
-import Database from "../db";
-import { getPartsOfSpeech, getPropertiesForPartOfSpeech } from "../utils";
-import DevanagariTextInput from "./devanagari";
+import firebase from "firebase/compat";
 
-class WordAddWorm extends React.Component {
-  constructor(props) {
+import Database, { Article } from "db";
+import {
+  getPartsOfSpeech,
+  getPropertiesForPartOfSpeech,
+  PartOfSpeech,
+} from "utils";
+import DevanagariTextInput from "components/Devanagari";
+
+type Props = {
+  word_id?: string;
+  word?: firebase.firestore.DocumentSnapshot<Article>;
+  user?: firebase.User;
+  routeToView?: () => void;
+};
+
+type UploadStatus = "not_started" | "pending" | "error";
+
+type State = {
+  upload_status: UploadStatus;
+  word: string;
+  transliteration: string;
+  spellings: string;
+  part_of_speech: PartOfSpeech;
+  properties: Article["properties"];
+  taken_from: string;
+  meanings: Article["meanings"];
+  control_rus: string;
+  control_hin: string;
+  stable_phrases_rus: string;
+  stable_phrases_hin: string;
+  examples_rus: string;
+  examples_hin: string;
+};
+
+class WordAddForm extends React.Component<Props, State> {
+  database: Database;
+
+  constructor(props: Props) {
     super(props);
     this.database = new Database();
     this.state = this.getCleanState();
@@ -13,7 +47,7 @@ class WordAddWorm extends React.Component {
     );
   }
 
-  getCleanState = () => ({
+  getCleanState = (): State => ({
     upload_status: "not_started",
     word: this.props.word ? this.props.word.get("word") : "",
     transliteration: this.props.word
@@ -68,11 +102,11 @@ class WordAddWorm extends React.Component {
   setUploadingWord = () => this.setState({ upload_status: "pending" });
   setSomethingWentWrong = () => this.setState({ upload_status: "error" });
 
-  editWord = (event) => {
+  editWord = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     this.setUploadingWord();
     this.database
-      .updateWord(this.props.word_id, {
+      .updateWord(this.props.word_id!, {
         word: this.state.word,
         transliteration: this.state.transliteration,
         spellings: this.state.spellings.split(","),
@@ -98,7 +132,7 @@ class WordAddWorm extends React.Component {
       .catch(this.setSomethingWentWrong);
   };
 
-  addWord = (event) => {
+  addWord = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     this.setUploadingWord();
     this.database
@@ -123,19 +157,22 @@ class WordAddWorm extends React.Component {
           hin: this.state.examples_hin,
         },
         status: "draft",
-        author: this.props.user ? this.props.user.email : undefined,
+        author: this.props.user
+          ? this.props.user.email || undefined
+          : undefined,
       })
       .then(this.resetState)
       .catch(this.setSomethingWentWrong);
   };
 
-  updateInput = (e) => {
-    this.setState({
-      [e.target.id]: e.target.value,
-    });
-  };
+  updateInput<T extends keyof State, V extends State[T]>(id: T, value: V) {
+    this.setState((prev) => ({
+      ...prev,
+      [id]: value,
+    }));
+  }
 
-  addMeaning = (e) => {
+  addMeaning = () => {
     this.setState({
       meanings: [
         ...this.state.meanings,
@@ -147,7 +184,7 @@ class WordAddWorm extends React.Component {
     });
   };
 
-  updateMeaning = (idx, value) => {
+  updateMeaning = (idx: number, value: string) => {
     let meanings = this.state.meanings;
     meanings[idx].meaning = value;
     this.setState({
@@ -155,7 +192,7 @@ class WordAddWorm extends React.Component {
     });
   };
 
-  updateMeaningExamples = (idx, value) => {
+  updateMeaningExamples = (idx: number, value: string) => {
     let meanings = this.state.meanings;
     meanings[idx].examples = value;
     this.setState({
@@ -163,7 +200,7 @@ class WordAddWorm extends React.Component {
     });
   };
 
-  updateProperty = (propName, valueName, value) => {
+  updateProperty = (propName: string, valueName: string, value: boolean) => {
     this.setState({
       properties: {
         ...(this.state.properties ? this.state.properties : {}),
@@ -188,39 +225,24 @@ class WordAddWorm extends React.Component {
             <div className="form-group">
               <label htmlFor="word">Слово</label>
               <DevanagariTextInput
-                id="word"
                 placeholder="हिंदी"
-                required={true}
-                setValue={(value) =>
-                  this.updateInput({ target: { id: "word", value: value } })
-                }
+                setValue={(value) => this.updateInput("word", value)}
                 defaultValue={this.state.word}
               />
             </div>
             <div className="form-group">
               <label htmlFor="transliteration">Транслитерация</label>
               <DevanagariTextInput
-                id="transliteration"
                 placeholder="hindi"
-                required={true}
-                setValue={(value) =>
-                  this.updateInput({
-                    target: { id: "transliteration", value: value },
-                  })
-                }
+                setValue={(value) => this.updateInput("transliteration", value)}
                 defaultValue={this.state.transliteration}
               />
             </div>
             <div className="form-group">
               <label htmlFor="spellings">Альтернативные написания</label>
               <DevanagariTextInput
-                id="spellings"
                 placeholder="हिंदी, हिन्दी"
-                setValue={(value) =>
-                  this.updateInput({
-                    target: { id: "spellings", value: value },
-                  })
-                }
+                setValue={(value) => this.updateInput("spellings", value)}
                 defaultValue={this.state.spellings}
               />
             </div>
@@ -229,7 +251,12 @@ class WordAddWorm extends React.Component {
               <select
                 className="form-control"
                 id="part_of_speech"
-                onChange={this.updateInput}
+                onChange={(e) =>
+                  this.updateInput(
+                    "part_of_speech",
+                    e.currentTarget.value as PartOfSpeech
+                  )
+                }
                 value={this.state.part_of_speech}
               >
                 {Object.entries(getPartsOfSpeech()).map(([key, value]) => (
@@ -298,23 +325,23 @@ class WordAddWorm extends React.Component {
                       className="form-control"
                       id={"meanings-" + index}
                       placeholder="хинди (язык)"
-                      rows="3"
+                      rows={3}
                       required={true}
                       value={value.meaning}
                       onChange={(event) =>
                         this.updateMeaning(index, event.target.value)
                       }
-                    ></textarea>
+                    />
                     <textarea
                       className="form-control"
                       id={"meanings_example" + index}
                       placeholder="हम हिंदी बोलते हैं। Мы говорим на хинди."
-                      rows="3"
+                      rows={3}
                       value={value.examples}
                       onChange={(event) =>
                         this.updateMeaningExamples(index, event.target.value)
                       }
-                    ></textarea>
+                    />
                     <div className="input-group-append">
                       {index === this.state.meanings.length - 1 ? (
                         <button
@@ -338,20 +365,24 @@ class WordAddWorm extends React.Component {
                 <textarea
                   className="form-control"
                   id="control_hin"
-                  rows="3"
+                  rows={3}
                   placeholder="на хинди"
-                  onChange={this.updateInput}
+                  onChange={(e) =>
+                    this.updateInput("control_hin", e.currentTarget.value)
+                  }
                   defaultValue={this.state.control_hin}
-                ></textarea>
+                />
                 <textarea
                   className="form-control"
                   id="control_rus"
-                  rows="3"
+                  rows={3}
                   placeholder="на русском"
                   required={true}
-                  onChange={this.updateInput}
+                  onChange={(e) =>
+                    this.updateInput("control_rus", e.currentTarget.value)
+                  }
                   defaultValue={this.state.control_rus}
-                ></textarea>
+                />
               </div>
             </div>
             <div className="form-group">
@@ -362,20 +393,30 @@ class WordAddWorm extends React.Component {
                 <textarea
                   className="form-control"
                   id="stable_phrases_hin"
-                  rows="3"
+                  rows={3}
                   placeholder="на хинди"
-                  onChange={this.updateInput}
+                  onChange={(e) =>
+                    this.updateInput(
+                      "stable_phrases_hin",
+                      e.currentTarget.value
+                    )
+                  }
                   defaultValue={this.state.stable_phrases_hin}
-                ></textarea>
+                />
                 <textarea
                   className="form-control"
                   id="stable_phrases_rus"
-                  rows="3"
+                  rows={3}
                   placeholder="на русском"
                   required={true}
-                  onChange={this.updateInput}
+                  onChange={(e) =>
+                    this.updateInput(
+                      "stable_phrases_rus",
+                      e.currentTarget.value
+                    )
+                  }
                   defaultValue={this.state.stable_phrases_rus}
-                ></textarea>
+                />
               </div>
             </div>
             <div className="form-group">
@@ -384,20 +425,24 @@ class WordAddWorm extends React.Component {
                 <textarea
                   className="form-control"
                   id="examples_hin"
-                  rows="3"
+                  rows={3}
                   placeholder="на хинди"
-                  onChange={this.updateInput}
+                  onChange={(e) =>
+                    this.updateInput("examples_hin", e.currentTarget.value)
+                  }
                   defaultValue={this.state.examples_hin}
-                ></textarea>
+                />
                 <textarea
                   className="form-control"
                   id="examples_rus"
-                  rows="3"
+                  rows={3}
                   placeholder="на русском"
                   required={true}
-                  onChange={this.updateInput}
+                  onChange={(e) =>
+                    this.updateInput("examples_rus", e.currentTarget.value)
+                  }
                   defaultValue={this.state.examples_rus}
-                ></textarea>
+                />
               </div>
             </div>
             <div className="form-group">
@@ -405,7 +450,9 @@ class WordAddWorm extends React.Component {
               <select
                 className="form-control"
                 id="taken_from"
-                onChange={this.updateInput}
+                onChange={(e) =>
+                  this.updateInput("taken_from", e.currentTarget.value)
+                }
                 value={this.state.taken_from}
               >
                 <option value="ниоткуда">ниоткуда</option>
@@ -438,4 +485,4 @@ class WordAddWorm extends React.Component {
   }
 }
 
-export default WordAddWorm;
+export default WordAddForm;

@@ -1,16 +1,30 @@
 import React from "react";
 import firebase from "firebase/compat";
-import Database from "./db";
-import "./App.css";
-import MainPage from "./components/MainPage";
-import WordAddWorm from "./components/WordAddForm";
-import WordPage from "./components/WordPage";
-import AboutUsPage from "./components/AboutUsPage";
 
-class App extends React.Component {
-  constructor(props) {
+import Database, { Article } from "db";
+import MainPage from "components/MainPage";
+import WordAddForm from "components/WordAddForm";
+import WordPage from "components/WordPage";
+import AboutUsPage from "components/AboutUsPage";
+
+import "./App.css";
+
+type Route = "main-page" | "about-us" | "add-word" | "edit-word" | "view-word";
+
+type State = {
+  currentRoute: Route;
+  foundWords: firebase.firestore.QueryDocumentSnapshot<Article>[];
+  user?: firebase.User;
+  userIsAdmin: boolean;
+  word_id?: string;
+  word?: firebase.firestore.DocumentSnapshot<Article>;
+};
+
+class App extends React.Component<{}, State> {
+  database = new Database();
+
+  constructor(props: {}) {
     super(props);
-    this.database = new Database();
     this.state = this.getCleanState();
   }
 
@@ -25,7 +39,7 @@ class App extends React.Component {
     });
   };
 
-  getCleanState = () => ({
+  getCleanState = (): State => ({
     currentRoute: "main-page",
     foundWords: [],
     user: undefined,
@@ -47,33 +61,34 @@ class App extends React.Component {
           .auth()
           .signInWithPopup(authProvider)
           .then((result) => {
-            this.setState({ user: result.user });
-            this.database.fetchUserAdmin(result.user, (value) =>
+            this.setState({ user: result.user || undefined });
+            this.database.fetchUserAdmin(result.user!, (value) =>
               this.setState({ userIsAdmin: value })
             );
           });
       });
   };
 
-  routeTo = (route) => this.setState({ currentRoute: route });
+  routeTo = (route: Route) => this.setState({ currentRoute: route });
 
   signOut = () => {
     firebase.auth().signOut();
     this.setState({ user: undefined, userIsAdmin: false });
   };
 
-  searchWord = (searchTerm) => {
+  searchWord = (searchTerm: string) => {
     this.database
       .searchWords(searchTerm, this.state.userIsAdmin)
-      .get()
+      .then((query) => query.get())
       .then((snapshot) => {
         this.setState({
-          foundWords: snapshot.docs,
+          foundWords:
+            snapshot.docs as firebase.firestore.QueryDocumentSnapshot<Article>[],
         });
       });
   };
 
-  viewWord = (word) => {
+  viewWord = (word: firebase.firestore.DocumentSnapshot<Article>) => {
     this.setState({ word: word });
     this.routeTo("view-word");
   };
@@ -91,27 +106,27 @@ class App extends React.Component {
       case "about-us":
         return <AboutUsPage />;
       case "add-word":
-        return <WordAddWorm user={this.state.user} />;
+        return <WordAddForm user={this.state.user} />;
       case "edit-word":
         return (
-          <WordAddWorm
+          <WordAddForm
             word_id={this.state.word_id}
             word={this.state.word}
             user={this.state.user}
+            routeToView={() => {
+              this.setState({ word_id: undefined });
+              this.routeTo("view-word");
+            }}
           />
         );
       case "view-word":
         return (
           <WordPage
-            word={this.state.word}
+            word={this.state.word!}
             isAdmin={this.state.userIsAdmin}
-            routeToEdit={(evt) => {
-              this.setState({ word_id: this.state.word.id });
+            routeToEdit={() => {
+              this.setState({ word_id: this.state.word!.id });
               this.routeTo("edit-word");
-            }}
-            routeToView={(evt) => {
-              this.setState({ word_id: undefined });
-              this.routeTo("view-word");
             }}
           />
         );

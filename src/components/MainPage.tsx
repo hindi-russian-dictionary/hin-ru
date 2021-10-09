@@ -1,14 +1,27 @@
 import React from "react";
+import firebase from "firebase/compat";
 
-class MainPage extends React.Component {
-  constructor(props) {
+import { Article } from "db";
+
+type Props = {
+  foundWords: firebase.firestore.QueryDocumentSnapshot<Article>[];
+  searchWord?: (term: string) => void;
+  viewWord?: (word: firebase.firestore.QueryDocumentSnapshot<Article>) => void;
+};
+
+type State = {
+  searchTerm: string;
+};
+
+class MainPage extends React.Component<Props, State> {
+  constructor(props: Props) {
     super(props);
     this.state = { searchTerm: "" };
   }
 
-  onSearchEnter = (event) => {
+  onSearchEnter = (event: React.KeyboardEvent): void => {
     if (event.key === "Enter") {
-      this.props.searchWord(this.state.searchTerm);
+      this.props.searchWord!(this.state.searchTerm);
     }
   };
 
@@ -47,7 +60,7 @@ class MainPage extends React.Component {
                 key={"open-word-modal-" + word.id}
                 type="button"
                 className="list-group-item list-group-item-action"
-                onClick={(evt) => this.props.viewWord(word)}
+                onClick={(evt) => this.props.viewWord!(word)}
               >
                 {word.get("word")}
                 &nbsp; &nbsp; &nbsp;
