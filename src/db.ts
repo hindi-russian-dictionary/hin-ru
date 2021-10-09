@@ -1,5 +1,5 @@
 import firebase from 'firebase/compat';
-import {PartOfSpeech} from 'utils';
+import {PartOfSpeech} from 'utils/parts-of-speech';
 
 export type Article = {
   word: string;

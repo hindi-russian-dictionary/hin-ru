@@ -3,10 +3,10 @@ import firebase from 'firebase/compat';
 
 import Database, {Article} from 'db';
 import {
-  getPartsOfSpeech,
-  getPropertiesForPartOfSpeech,
+  PARTS_OF_SPEECH,
+  PARTS_OF_SPEECH_PROPERTIES,
   PartOfSpeech,
-} from 'utils';
+} from 'utils/parts-of-speech';
 import DevanagariTextInput from 'components/Devanagari';
 
 type Props = {
@@ -259,7 +259,7 @@ class WordAddForm extends React.Component<Props, State> {
                 }
                 value={this.state.part_of_speech}
               >
-                {Object.entries(getPartsOfSpeech()).map(([key, value]) => (
+                {Object.entries(PARTS_OF_SPEECH).map(([key, value]) => (
                   <option key={key} value={key}>
                     {value}
                   </option>
@@ -268,34 +268,34 @@ class WordAddForm extends React.Component<Props, State> {
             </div>
             <hr />
             <label htmlFor="properties">Свойства</label>
-            {getPropertiesForPartOfSpeech(this.state.part_of_speech).map(
+            {(PARTS_OF_SPEECH_PROPERTIES[this.state.part_of_speech] || []).map(
               (prop) => (
-                <div className="form-group" key={'prop-' + prop.name}>
-                  <label htmlFor={prop.name}>{prop.readableName}</label>
+                <div className="form-group" key={'prop-' + prop.key}>
+                  <label htmlFor={prop.key}>{prop.name}</label>
                   <br />
                   <div className="form-check form-check-inline">
                     {prop.values.map((value) => {
                       let valueId =
-                        'prop-' + prop.name + '-value-' + value.name;
+                        'prop-' + prop.key + '-value-' + value.key;
                       return (
                         <React.Fragment key={valueId}>
                           <input
                             className="form-check-input"
                             type="checkbox"
                             id={valueId}
-                            value={value.name}
+                            value={value.key}
                             onChange={(event) =>
                               this.updateProperty(
-                                prop.name,
-                                value.name,
+                                prop.key,
+                                value.key,
                                 event.target.checked
                               )
                             }
                             checked={
                               this.state.properties &&
-                              prop.name in this.state.properties &&
-                              value.name in this.state.properties[prop.name]
-                                ? this.state.properties[prop.name][value.name]
+                              prop.key in this.state.properties &&
+                              value.key in this.state.properties[prop.key]
+                                ? this.state.properties[prop.key][value.key]
                                 : false
                             }
                           />
@@ -303,7 +303,7 @@ class WordAddForm extends React.Component<Props, State> {
                             className="form-check-label pr-2"
                             htmlFor={valueId}
                           >
-                            {value.readableName}
+                            {value.name}
                           </label>
                         </React.Fragment>
                       );

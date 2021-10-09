@@ -1,7 +1,7 @@
 import React from 'react';
 import firebase from 'firebase/compat';
 
-import {getPartsOfSpeech, getPropertiesForPartOfSpeech} from 'utils';
+import {PartOfSpeech, PARTS_OF_SPEECH, PARTS_OF_SPEECH_PROPERTIES} from 'utils/parts-of-speech';
 import Database, {Article} from 'db';
 
 type Props = {
@@ -69,7 +69,7 @@ class WordPage extends React.Component<Props, State> {
               <th>Часть речи</th>
               <td>
                 {
-                  getPartsOfSpeech()[
+                  PARTS_OF_SPEECH[
                     word.get('part_of_speech') as Article['part_of_speech']
                   ]
                 }
@@ -79,20 +79,20 @@ class WordPage extends React.Component<Props, State> {
               <th>Транслитерация</th>
               <td>{word.get('transliteration')}</td>
             </tr>
-            {getPropertiesForPartOfSpeech(word.get('part_of_speech')).map(
+            {(PARTS_OF_SPEECH_PROPERTIES[word.get('part_of_speech') as PartOfSpeech] || []).map(
               (property) => (
-                <tr key={word.get('word') + '-' + property.name}>
-                  <th>{property.readableName}</th>
+                <tr key={word.get('word') + '-' + property.key}>
+                  <th>{property.name}</th>
                   <td>
                     {word.get('properties') &&
-                    property.name in word.get('properties')
-                      ? Object.entries(word.get('properties')[property.name])
+                    property.key in word.get('properties')
+                      ? Object.entries(word.get('properties')[property.key])
                           .filter(([_, value]) => value)
                           .map(
                             ([key, _]) =>
                               property.values.filter(
-                                (value) => value.name === key
-                              )[0].readableName
+                                (value) => value.key === key
+                              )[0].name
                           )
                       : '-'}
                   </td>
