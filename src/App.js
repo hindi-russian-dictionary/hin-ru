@@ -1,5 +1,5 @@
 import React from 'react';
-import firebase from 'firebase';
+import firebase from 'firebase/compat';
 import Database from './db';
 import './App.css';
 import MainPage from './components/MainPage';
