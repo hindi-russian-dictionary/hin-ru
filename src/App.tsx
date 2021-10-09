@@ -1,15 +1,15 @@
-import React from "react";
-import firebase from "firebase/compat";
+import React from 'react';
+import firebase from 'firebase/compat';
 
-import Database, { Article } from "db";
-import MainPage from "components/MainPage";
-import WordAddForm from "components/WordAddForm";
-import WordPage from "components/WordPage";
-import AboutUsPage from "components/AboutUsPage";
+import Database, {Article} from 'db';
+import MainPage from 'components/MainPage';
+import WordAddForm from 'components/WordAddForm';
+import WordPage from 'components/WordPage';
+import AboutUsPage from 'components/AboutUsPage';
 
-import "./App.css";
+import './App.css';
 
-type Route = "main-page" | "about-us" | "add-word" | "edit-word" | "view-word";
+type Route = 'main-page' | 'about-us' | 'add-word' | 'edit-word' | 'view-word';
 
 type State = {
   currentRoute: Route;
@@ -31,16 +31,16 @@ class App extends React.Component<{}, State> {
   componentDidMount = () => {
     firebase.auth().onAuthStateChanged((user) => {
       if (user) {
-        this.setState({ user: user });
+        this.setState({user: user});
         this.database.fetchUserAdmin(user, (value) =>
-          this.setState({ userIsAdmin: value })
+          this.setState({userIsAdmin: value})
         );
       }
     });
   };
 
   getCleanState = (): State => ({
-    currentRoute: "main-page",
+    currentRoute: 'main-page',
     foundWords: [],
     user: undefined,
     userIsAdmin: false,
@@ -61,19 +61,19 @@ class App extends React.Component<{}, State> {
           .auth()
           .signInWithPopup(authProvider)
           .then((result) => {
-            this.setState({ user: result.user || undefined });
+            this.setState({user: result.user || undefined});
             this.database.fetchUserAdmin(result.user!, (value) =>
-              this.setState({ userIsAdmin: value })
+              this.setState({userIsAdmin: value})
             );
           });
       });
   };
 
-  routeTo = (route: Route) => this.setState({ currentRoute: route });
+  routeTo = (route: Route) => this.setState({currentRoute: route});
 
   signOut = () => {
     firebase.auth().signOut();
-    this.setState({ user: undefined, userIsAdmin: false });
+    this.setState({user: undefined, userIsAdmin: false});
   };
 
   searchWord = (searchTerm: string) => {
@@ -89,13 +89,13 @@ class App extends React.Component<{}, State> {
   };
 
   viewWord = (word: firebase.firestore.DocumentSnapshot<Article>) => {
-    this.setState({ word: word });
-    this.routeTo("view-word");
+    this.setState({word: word});
+    this.routeTo('view-word');
   };
 
   getPage = () => {
     switch (this.state.currentRoute) {
-      case "main-page":
+      case 'main-page':
         return (
           <MainPage
             foundWords={this.state.foundWords}
@@ -103,30 +103,30 @@ class App extends React.Component<{}, State> {
             viewWord={this.viewWord}
           />
         );
-      case "about-us":
+      case 'about-us':
         return <AboutUsPage />;
-      case "add-word":
+      case 'add-word':
         return <WordAddForm user={this.state.user} />;
-      case "edit-word":
+      case 'edit-word':
         return (
           <WordAddForm
             word_id={this.state.word_id}
             word={this.state.word}
             user={this.state.user}
             routeToView={() => {
-              this.setState({ word_id: undefined });
-              this.routeTo("view-word");
+              this.setState({word_id: undefined});
+              this.routeTo('view-word');
             }}
           />
         );
-      case "view-word":
+      case 'view-word':
         return (
           <WordPage
             word={this.state.word!}
             isAdmin={this.state.userIsAdmin}
             routeToEdit={() => {
-              this.setState({ word_id: this.state.word!.id });
-              this.routeTo("edit-word");
+              this.setState({word_id: this.state.word!.id});
+              this.routeTo('edit-word');
             }}
           />
         );
@@ -143,7 +143,7 @@ class App extends React.Component<{}, State> {
             <li className="nav-item">
               <button
                 className="btn nav-link"
-                onClick={() => this.routeTo("main-page")}
+                onClick={() => this.routeTo('main-page')}
               >
                 Главная
               </button>
@@ -151,7 +151,7 @@ class App extends React.Component<{}, State> {
             <li className="nav-item">
               <button
                 className="btn nav-link"
-                onClick={() => this.routeTo("add-word")}
+                onClick={() => this.routeTo('add-word')}
               >
                 Предложить свое слово
               </button>
@@ -159,7 +159,7 @@ class App extends React.Component<{}, State> {
             <li className="nav-item">
               <button
                 className="btn nav-link"
-                onClick={() => this.routeTo("about-us")}
+                onClick={() => this.routeTo('about-us')}
               >
                 О нас
               </button>

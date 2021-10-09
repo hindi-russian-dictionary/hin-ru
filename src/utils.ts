@@ -1,29 +1,29 @@
 export type PartOfSpeech =
-  | "noun"
-  | "verb"
-  | "compound_verb"
-  | "adjective"
-  | "adverb"
-  | "pronoun"
-  | "conjunction"
-  | "interjection"
-  | "postposition"
-  | "particle"
-  | "numeral";
+  | 'noun'
+  | 'verb'
+  | 'compound_verb'
+  | 'adjective'
+  | 'adverb'
+  | 'pronoun'
+  | 'conjunction'
+  | 'interjection'
+  | 'postposition'
+  | 'particle'
+  | 'numeral';
 
 function getPartsOfSpeech(): Record<PartOfSpeech, string> {
   return {
-    noun: "существительное",
-    verb: "глагол",
-    compound_verb: "составной глагол",
-    adjective: "прилагательное",
-    adverb: "наречие",
-    pronoun: "местоимение",
-    conjunction: "союз",
-    interjection: "междометие",
-    postposition: "послелог",
-    particle: "частица",
-    numeral: "числительное",
+    noun: 'существительное',
+    verb: 'глагол',
+    compound_verb: 'составной глагол',
+    adjective: 'прилагательное',
+    adverb: 'наречие',
+    pronoun: 'местоимение',
+    conjunction: 'союз',
+    interjection: 'междометие',
+    postposition: 'послелог',
+    particle: 'частица',
+    numeral: 'числительное',
   };
 }
 
@@ -43,81 +43,81 @@ function getPropertiesForPartOfSpeech(partOfSpeech: PartOfSpeech) {
     {
       noun: [
         {
-          name: "gender",
-          readableName: "Род",
+          name: 'gender',
+          readableName: 'Род',
           values: [
-            { name: "m", readableName: "мужской" },
-            { name: "f", readableName: "женский" },
+            {name: 'm', readableName: 'мужской'},
+            {name: 'f', readableName: 'женский'},
           ],
         },
       ],
       verb: [
         {
-          name: "transitivity",
-          readableName: "Переходность",
+          name: 'transitivity',
+          readableName: 'Переходность',
           values: [
-            { name: "transitive", readableName: "переходный" },
-            { name: "non_transitive", readableName: "непереходный" },
+            {name: 'transitive', readableName: 'переходный'},
+            {name: 'non_transitive', readableName: 'непереходный'},
           ],
         },
       ],
       compound_verb: [
         {
-          name: "transitivity",
-          readableName: "Переходность",
+          name: 'transitivity',
+          readableName: 'Переходность',
           values: [
-            { name: "transitive", readableName: "переходный" },
-            { name: "non_transitive", readableName: "непереходный" },
+            {name: 'transitive', readableName: 'переходный'},
+            {name: 'non_transitive', readableName: 'непереходный'},
           ],
         },
         {
-          name: "compound_of",
-          readableName: "Состоит из",
+          name: 'compound_of',
+          readableName: 'Состоит из',
           values: [
             {
-              name: "noun_and_verb",
-              readableName: "существительного и глагола",
+              name: 'noun_and_verb',
+              readableName: 'существительного и глагола',
             },
             {
-              name: "adjective_and_verb",
-              readableName: "прилагательного и глагола",
+              name: 'adjective_and_verb',
+              readableName: 'прилагательного и глагола',
             },
             {
-              name: "participle_and_verb",
-              readableName: "причастия и глагола",
+              name: 'participle_and_verb',
+              readableName: 'причастия и глагола',
             },
           ],
         },
       ],
       adjective: [
         {
-          name: "mutability",
-          readableName: "Изменяемость",
+          name: 'mutability',
+          readableName: 'Изменяемость',
           values: [
-            { name: "mutable", readableName: "изменяемое" },
-            { name: "immutable", readableName: "неизменяемое" },
+            {name: 'mutable', readableName: 'изменяемое'},
+            {name: 'immutable', readableName: 'неизменяемое'},
           ],
         },
       ],
       adverb: [],
       pronoun: [
         {
-          name: "order",
-          readableName: "Разряд",
+          name: 'order',
+          readableName: 'Разряд',
           values: [
-            { name: "personal", readableName: "личное" },
-            { name: "demonstrative", readableName: "указательное" },
-            { name: "relative", readableName: "относительное" },
-            { name: "indefinite", readableName: "неопределенное" },
-            { name: "interrogative", readableName: "вопросительное" },
+            {name: 'personal', readableName: 'личное'},
+            {name: 'demonstrative', readableName: 'указательное'},
+            {name: 'relative', readableName: 'относительное'},
+            {name: 'indefinite', readableName: 'неопределенное'},
+            {name: 'interrogative', readableName: 'вопросительное'},
           ],
         },
         {
-          name: "gender",
-          readableName: "Род",
+          name: 'gender',
+          readableName: 'Род',
           values: [
-            { name: "m", readableName: "мужской" },
-            { name: "f", readableName: "женский" },
+            {name: 'm', readableName: 'мужской'},
+            {name: 'f', readableName: 'женский'},
           ],
         },
       ],
@@ -127,12 +127,12 @@ function getPropertiesForPartOfSpeech(partOfSpeech: PartOfSpeech) {
       particle: [],
       numeral: [
         {
-          name: "type",
-          readableName: "Тип",
+          name: 'type',
+          readableName: 'Тип',
           values: [
-            { name: "quantitative", readableName: "количественное" },
-            { name: "ordinal", readableName: "порядковое" },
-            { name: "collective", readableName: "собирательное" },
+            {name: 'quantitative', readableName: 'количественное'},
+            {name: 'ordinal', readableName: 'порядковое'},
+            {name: 'collective', readableName: 'собирательное'},
           ],
         },
       ],
@@ -140,4 +140,4 @@ function getPropertiesForPartOfSpeech(partOfSpeech: PartOfSpeech) {
   return propertiesByPartOfSpeech[partOfSpeech];
 }
 
-export { getPartsOfSpeech, getPropertiesForPartOfSpeech };
+export {getPartsOfSpeech, getPropertiesForPartOfSpeech};

@@ -1,13 +1,13 @@
-import React from "react";
-import firebase from "firebase/compat";
+import React from 'react';
+import firebase from 'firebase/compat';
 
-import Database, { Article } from "db";
+import Database, {Article} from 'db';
 import {
   getPartsOfSpeech,
   getPropertiesForPartOfSpeech,
   PartOfSpeech,
-} from "utils";
-import DevanagariTextInput from "components/Devanagari";
+} from 'utils';
+import DevanagariTextInput from 'components/Devanagari';
 
 type Props = {
   word_id?: string;
@@ -16,7 +16,7 @@ type Props = {
   routeToView?: () => void;
 };
 
-type UploadStatus = "not_started" | "pending" | "error";
+type UploadStatus = 'not_started' | 'pending' | 'error';
 
 type State = {
   upload_status: UploadStatus;
@@ -24,9 +24,9 @@ type State = {
   transliteration: string;
   spellings: string;
   part_of_speech: PartOfSpeech;
-  properties: Article["properties"];
+  properties: Article['properties'];
   taken_from: string;
-  meanings: Article["meanings"];
+  meanings: Article['meanings'];
   control_rus: string;
   control_hin: string;
   stable_phrases_rus: string;
@@ -43,64 +43,64 @@ class WordAddForm extends React.Component<Props, State> {
     this.database = new Database();
     this.state = this.getCleanState();
     console.log(
-      this.props.word ? this.props.word.get("stable_phrases").rus : "no word"
+      this.props.word ? this.props.word.get('stable_phrases').rus : 'no word'
     );
   }
 
   getCleanState = (): State => ({
-    upload_status: "not_started",
-    word: this.props.word ? this.props.word.get("word") : "",
+    upload_status: 'not_started',
+    word: this.props.word ? this.props.word.get('word') : '',
     transliteration: this.props.word
-      ? this.props.word.get("transliteration")
-      : "",
+      ? this.props.word.get('transliteration')
+      : '',
     spellings: this.props.word
-      ? this.props.word.get("spellings").join(",")
-      : "",
+      ? this.props.word.get('spellings').join(',')
+      : '',
     part_of_speech: this.props.word
-      ? this.props.word.get("part_of_speech")
-      : "noun",
-    properties: this.props.word ? this.props.word.get("properties") : {},
+      ? this.props.word.get('part_of_speech')
+      : 'noun',
+    properties: this.props.word ? this.props.word.get('properties') : {},
     taken_from: this.props.word
-      ? this.props.word.get("taken_from")
-      : "ниоткуда",
+      ? this.props.word.get('taken_from')
+      : 'ниоткуда',
     meanings: this.props.word
-      ? this.props.word.get("meanings")
+      ? this.props.word.get('meanings')
       : [
           {
-            meaning: "",
-            examples: "",
+            meaning: '',
+            examples: '',
           },
         ],
     control_rus:
-      this.props.word && this.props.word.get("control")
-        ? this.props.word.get("control").rus
-        : "",
+      this.props.word && this.props.word.get('control')
+        ? this.props.word.get('control').rus
+        : '',
     control_hin:
-      this.props.word && this.props.word.get("control")
-        ? this.props.word.get("control").hin
-        : "",
+      this.props.word && this.props.word.get('control')
+        ? this.props.word.get('control').hin
+        : '',
     stable_phrases_rus:
-      this.props.word && this.props.word.get("stable_phrases")
-        ? this.props.word.get("stable_phrases").rus
-        : "",
+      this.props.word && this.props.word.get('stable_phrases')
+        ? this.props.word.get('stable_phrases').rus
+        : '',
     stable_phrases_hin:
-      this.props.word && this.props.word.get("stable_phrases")
-        ? this.props.word.get("stable_phrases").hin
-        : "",
+      this.props.word && this.props.word.get('stable_phrases')
+        ? this.props.word.get('stable_phrases').hin
+        : '',
     examples_rus:
-      this.props.word && this.props.word.get("examples")
-        ? this.props.word.get("examples").rus
-        : "",
+      this.props.word && this.props.word.get('examples')
+        ? this.props.word.get('examples').rus
+        : '',
     examples_hin:
-      this.props.word && this.props.word.get("examples")
-        ? this.props.word.get("examples").hin
-        : "",
+      this.props.word && this.props.word.get('examples')
+        ? this.props.word.get('examples').hin
+        : '',
   });
 
   resetState = () => this.setState(this.getCleanState());
 
-  setUploadingWord = () => this.setState({ upload_status: "pending" });
-  setSomethingWentWrong = () => this.setState({ upload_status: "error" });
+  setUploadingWord = () => this.setState({upload_status: 'pending'});
+  setSomethingWentWrong = () => this.setState({upload_status: 'error'});
 
   editWord = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -109,7 +109,7 @@ class WordAddForm extends React.Component<Props, State> {
       .updateWord(this.props.word_id!, {
         word: this.state.word,
         transliteration: this.state.transliteration,
-        spellings: this.state.spellings.split(","),
+        spellings: this.state.spellings.split(','),
         part_of_speech: this.state.part_of_speech,
         meanings: this.state.meanings,
         properties: this.state.properties ? this.state.properties : {},
@@ -126,7 +126,7 @@ class WordAddForm extends React.Component<Props, State> {
           rus: this.state.examples_rus,
           hin: this.state.examples_hin,
         },
-        status: "draft",
+        status: 'draft',
       })
       .then(this.props.routeToView)
       .catch(this.setSomethingWentWrong);
@@ -139,7 +139,7 @@ class WordAddForm extends React.Component<Props, State> {
       .saveWord({
         word: this.state.word,
         transliteration: this.state.transliteration,
-        spellings: this.state.spellings.split(","),
+        spellings: this.state.spellings.split(','),
         part_of_speech: this.state.part_of_speech,
         meanings: this.state.meanings,
         properties: this.state.properties ? this.state.properties : {},
@@ -156,7 +156,7 @@ class WordAddForm extends React.Component<Props, State> {
           rus: this.state.examples_rus,
           hin: this.state.examples_hin,
         },
-        status: "draft",
+        status: 'draft',
         author: this.props.user
           ? this.props.user.email || undefined
           : undefined,
@@ -177,8 +177,8 @@ class WordAddForm extends React.Component<Props, State> {
       meanings: [
         ...this.state.meanings,
         {
-          meaning: "",
-          examples: "",
+          meaning: '',
+          examples: '',
         },
       ],
     });
@@ -218,15 +218,15 @@ class WordAddForm extends React.Component<Props, State> {
     return (
       <div className="row my-4">
         <div className="col-12">
-          {this.props.word && this.props.word.get("author")
-            ? "Автор - " + this.props.word.get("author")
-            : "Автор неизвестен"}
+          {this.props.word && this.props.word.get('author')
+            ? 'Автор - ' + this.props.word.get('author')
+            : 'Автор неизвестен'}
           <form onSubmit={this.props.word_id ? this.editWord : this.addWord}>
             <div className="form-group">
               <label htmlFor="word">Слово</label>
               <DevanagariTextInput
                 placeholder="हिंदी"
-                setValue={(value) => this.updateInput("word", value)}
+                setValue={(value) => this.updateInput('word', value)}
                 defaultValue={this.state.word}
               />
             </div>
@@ -234,7 +234,7 @@ class WordAddForm extends React.Component<Props, State> {
               <label htmlFor="transliteration">Транслитерация</label>
               <DevanagariTextInput
                 placeholder="hindi"
-                setValue={(value) => this.updateInput("transliteration", value)}
+                setValue={(value) => this.updateInput('transliteration', value)}
                 defaultValue={this.state.transliteration}
               />
             </div>
@@ -242,7 +242,7 @@ class WordAddForm extends React.Component<Props, State> {
               <label htmlFor="spellings">Альтернативные написания</label>
               <DevanagariTextInput
                 placeholder="हिंदी, हिन्दी"
-                setValue={(value) => this.updateInput("spellings", value)}
+                setValue={(value) => this.updateInput('spellings', value)}
                 defaultValue={this.state.spellings}
               />
             </div>
@@ -253,7 +253,7 @@ class WordAddForm extends React.Component<Props, State> {
                 id="part_of_speech"
                 onChange={(e) =>
                   this.updateInput(
-                    "part_of_speech",
+                    'part_of_speech',
                     e.currentTarget.value as PartOfSpeech
                   )
                 }
@@ -270,13 +270,13 @@ class WordAddForm extends React.Component<Props, State> {
             <label htmlFor="properties">Свойства</label>
             {getPropertiesForPartOfSpeech(this.state.part_of_speech).map(
               (prop) => (
-                <div className="form-group" key={"prop-" + prop.name}>
+                <div className="form-group" key={'prop-' + prop.name}>
                   <label htmlFor={prop.name}>{prop.readableName}</label>
                   <br />
                   <div className="form-check form-check-inline">
                     {prop.values.map((value) => {
                       let valueId =
-                        "prop-" + prop.name + "-value-" + value.name;
+                        'prop-' + prop.name + '-value-' + value.name;
                       return (
                         <React.Fragment key={valueId}>
                           <input
@@ -319,11 +319,11 @@ class WordAddForm extends React.Component<Props, State> {
                 return (
                   <div
                     className="input-group"
-                    key={"meaning-input-group-" + index}
+                    key={'meaning-input-group-' + index}
                   >
                     <textarea
                       className="form-control"
-                      id={"meanings-" + index}
+                      id={'meanings-' + index}
                       placeholder="хинди (язык)"
                       rows={3}
                       required={true}
@@ -334,7 +334,7 @@ class WordAddForm extends React.Component<Props, State> {
                     />
                     <textarea
                       className="form-control"
-                      id={"meanings_example" + index}
+                      id={'meanings_example' + index}
                       placeholder="हम हिंदी बोलते हैं। Мы говорим на хинди."
                       rows={3}
                       value={value.examples}
@@ -352,7 +352,7 @@ class WordAddForm extends React.Component<Props, State> {
                           <i className="fas fa-plus"></i>
                         </button>
                       ) : (
-                        ""
+                        ''
                       )}
                     </div>
                   </div>
@@ -368,7 +368,7 @@ class WordAddForm extends React.Component<Props, State> {
                   rows={3}
                   placeholder="на хинди"
                   onChange={(e) =>
-                    this.updateInput("control_hin", e.currentTarget.value)
+                    this.updateInput('control_hin', e.currentTarget.value)
                   }
                   defaultValue={this.state.control_hin}
                 />
@@ -379,7 +379,7 @@ class WordAddForm extends React.Component<Props, State> {
                   placeholder="на русском"
                   required={true}
                   onChange={(e) =>
-                    this.updateInput("control_rus", e.currentTarget.value)
+                    this.updateInput('control_rus', e.currentTarget.value)
                   }
                   defaultValue={this.state.control_rus}
                 />
@@ -397,7 +397,7 @@ class WordAddForm extends React.Component<Props, State> {
                   placeholder="на хинди"
                   onChange={(e) =>
                     this.updateInput(
-                      "stable_phrases_hin",
+                      'stable_phrases_hin',
                       e.currentTarget.value
                     )
                   }
@@ -411,7 +411,7 @@ class WordAddForm extends React.Component<Props, State> {
                   required={true}
                   onChange={(e) =>
                     this.updateInput(
-                      "stable_phrases_rus",
+                      'stable_phrases_rus',
                       e.currentTarget.value
                     )
                   }
@@ -428,7 +428,7 @@ class WordAddForm extends React.Component<Props, State> {
                   rows={3}
                   placeholder="на хинди"
                   onChange={(e) =>
-                    this.updateInput("examples_hin", e.currentTarget.value)
+                    this.updateInput('examples_hin', e.currentTarget.value)
                   }
                   defaultValue={this.state.examples_hin}
                 />
@@ -439,7 +439,7 @@ class WordAddForm extends React.Component<Props, State> {
                   placeholder="на русском"
                   required={true}
                   onChange={(e) =>
-                    this.updateInput("examples_rus", e.currentTarget.value)
+                    this.updateInput('examples_rus', e.currentTarget.value)
                   }
                   defaultValue={this.state.examples_rus}
                 />
@@ -451,7 +451,7 @@ class WordAddForm extends React.Component<Props, State> {
                 className="form-control"
                 id="taken_from"
                 onChange={(e) =>
-                  this.updateInput("taken_from", e.currentTarget.value)
+                  this.updateInput('taken_from', e.currentTarget.value)
                 }
                 value={this.state.taken_from}
               >
@@ -466,16 +466,16 @@ class WordAddForm extends React.Component<Props, State> {
             <div className="col-12 my-3 text-center">
               <button
                 className={
-                  "btn btn-outline-primary" +
-                  (this.state.upload_status !== "not_started"
-                    ? " disabled"
-                    : "")
+                  'btn btn-outline-primary' +
+                  (this.state.upload_status !== 'not_started'
+                    ? ' disabled'
+                    : '')
                 }
                 type="submit"
               >
-                {this.state.upload_status === "error"
-                  ? "Что-то пошло не так. Нажмите F12, сделайте скриншот и покажите его Диме."
-                  : "Отправить"}
+                {this.state.upload_status === 'error'
+                  ? 'Что-то пошло не так. Нажмите F12, сделайте скриншот и покажите его Диме.'
+                  : 'Отправить'}
               </button>
             </div>
           </form>

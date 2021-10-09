@@ -1,8 +1,8 @@
-import React from "react";
-import firebase from "firebase/compat";
+import React from 'react';
+import firebase from 'firebase/compat';
 
-import { getPartsOfSpeech, getPropertiesForPartOfSpeech } from "utils";
-import Database, { Article } from "db";
+import {getPartsOfSpeech, getPropertiesForPartOfSpeech} from 'utils';
+import Database, {Article} from 'db';
 
 type Props = {
   word: firebase.firestore.DocumentSnapshot<Article>;
@@ -20,7 +20,7 @@ class WordPage extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.database = new Database();
-    this.state = { isWordApproved: props.word.get("approved") };
+    this.state = {isWordApproved: props.word.get('approved')};
   }
 
   render() {
@@ -32,7 +32,7 @@ class WordPage extends React.Component<Props, State> {
             Редактировать (осторожно, вы админ)
           </button>
         ) : (
-          ""
+          ''
         )}
         &nbsp;
         {this.props.isAdmin ? (
@@ -41,8 +41,8 @@ class WordPage extends React.Component<Props, State> {
               className="btn btn-success"
               onClick={() =>
                 this.database
-                  .updateWord(word.id, { approved: true })
-                  .then(() => this.setState({ isWordApproved: true }))
+                  .updateWord(word.id, {approved: true})
+                  .then(() => this.setState({isWordApproved: true}))
               }
             >
               Одобрить!
@@ -52,17 +52,17 @@ class WordPage extends React.Component<Props, State> {
               className="btn btn-danger"
               onClick={() =>
                 this.database
-                  .updateWord(word.id, { approved: false })
-                  .then(() => this.setState({ isWordApproved: false }))
+                  .updateWord(word.id, {approved: false})
+                  .then(() => this.setState({isWordApproved: false}))
               }
             >
               Разодобрить :(
             </button>
           )
         ) : (
-          ""
+          ''
         )}
-        <h1>{word.get("word")}</h1>
+        <h1>{word.get('word')}</h1>
         <table className="table">
           <tbody>
             <tr>
@@ -70,23 +70,23 @@ class WordPage extends React.Component<Props, State> {
               <td>
                 {
                   getPartsOfSpeech()[
-                    word.get("part_of_speech") as Article["part_of_speech"]
+                    word.get('part_of_speech') as Article['part_of_speech']
                   ]
                 }
               </td>
             </tr>
             <tr>
               <th>Транслитерация</th>
-              <td>{word.get("transliteration")}</td>
+              <td>{word.get('transliteration')}</td>
             </tr>
-            {getPropertiesForPartOfSpeech(word.get("part_of_speech")).map(
+            {getPropertiesForPartOfSpeech(word.get('part_of_speech')).map(
               (property) => (
-                <tr key={word.get("word") + "-" + property.name}>
+                <tr key={word.get('word') + '-' + property.name}>
                   <th>{property.readableName}</th>
                   <td>
-                    {word.get("properties") &&
-                    property.name in word.get("properties")
-                      ? Object.entries(word.get("properties")[property.name])
+                    {word.get('properties') &&
+                    property.name in word.get('properties')
+                      ? Object.entries(word.get('properties')[property.name])
                           .filter(([_, value]) => value)
                           .map(
                             ([key, _]) =>
@@ -94,21 +94,21 @@ class WordPage extends React.Component<Props, State> {
                                 (value) => value.name === key
                               )[0].readableName
                           )
-                      : "-"}
+                      : '-'}
                   </td>
                 </tr>
               )
             )}
             <tr>
               <th>Альтернативные написания</th>
-              <td>{word.get("spellings")}</td>
+              <td>{word.get('spellings')}</td>
             </tr>
             <tr>
               <th>Значения</th>
               <td>
                 <table className="table">
                   <tbody>
-                    {(word.get("meanings") as Article["meanings"]).map(
+                    {(word.get('meanings') as Article['meanings']).map(
                       (meaning) => (
                         <tr key={meaning.meaning}>
                           <td>{meaning.meaning}</td>
@@ -122,30 +122,30 @@ class WordPage extends React.Component<Props, State> {
             </tr>
             <tr>
               <th>Управление</th>
-              <td>{word.get("control") ? word.get("control")["hin"] : ""}</td>
-              <td>{word.get("control") ? word.get("control")["rus"] : ""}</td>
+              <td>{word.get('control') ? word.get('control')['hin'] : ''}</td>
+              <td>{word.get('control') ? word.get('control')['rus'] : ''}</td>
             </tr>
             <tr>
               <th>Устойчивые словосочетания</th>
               <td>
-                {word.get("stable_phrases")
-                  ? word.get("stable_phrases")["hin"]
-                  : ""}
+                {word.get('stable_phrases')
+                  ? word.get('stable_phrases')['hin']
+                  : ''}
               </td>
               <td>
-                {word.get("stable_phrases")
-                  ? word.get("stable_phrases")["rus"]
-                  : ""}
+                {word.get('stable_phrases')
+                  ? word.get('stable_phrases')['rus']
+                  : ''}
               </td>
             </tr>
             <tr>
               <th>Примеры</th>
-              <td>{word.get("examples") ? word.get("examples")["hin"] : ""}</td>
-              <td>{word.get("examples") ? word.get("examples")["rus"] : ""}</td>
+              <td>{word.get('examples') ? word.get('examples')['hin'] : ''}</td>
+              <td>{word.get('examples') ? word.get('examples')['rus'] : ''}</td>
             </tr>
             <tr>
               <th>Заимствовано из</th>
-              <td>{word.get("taken_from")}</td>
+              <td>{word.get('taken_from')}</td>
             </tr>
           </tbody>
         </table>

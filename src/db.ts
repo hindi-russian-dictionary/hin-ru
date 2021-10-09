@@ -1,5 +1,5 @@
-import firebase from "firebase/compat";
-import { PartOfSpeech } from "utils";
+import firebase from 'firebase/compat';
+import {PartOfSpeech} from 'utils';
 
 export type Article = {
   word: string;
@@ -24,7 +24,7 @@ export type Article = {
     rus: string;
     hin: string;
   };
-  status: "draft";
+  status: 'draft';
   author?: string;
   approved?: boolean;
 };
@@ -51,18 +51,18 @@ class Database {
         firebase.initializeApp(config);
       }
     } else {
-      console.log("No Firebase config found!");
+      console.log('No Firebase config found!');
     }
   }
 
   async saveWord(word: Article): Promise<void> {
     const db = firebase.firestore();
-    await db.collection("articles").add(word);
+    await db.collection('articles').add(word);
   }
 
   async updateWord(word_id: string, word: Partial<Article>): Promise<void> {
     const db = firebase.firestore();
-    await db.collection("articles").doc(word_id).update(word);
+    await db.collection('articles').doc(word_id).update(word);
   }
 
   async searchWords(
@@ -72,15 +72,15 @@ class Database {
     const db = firebase.firestore();
     let collection = (
       db.collection(
-        "articles"
+        'articles'
       ) as firebase.firestore.CollectionReference<Article>
-    ).orderBy("word");
+    ).orderBy('word');
     if (!isAdmin) {
-      collection = collection.where("approved", "==", true);
+      collection = collection.where('approved', '==', true);
     }
     return collection
       .startAt(lookup)
-      .endAt(lookup + "\uf8ff")
+      .endAt(lookup + '\uf8ff')
       .limit(15);
   }
 
@@ -89,14 +89,14 @@ class Database {
     setAdminCallback: (isAdmin: boolean) => void
   ): Promise<void> {
     const db = firebase.firestore();
-    db.collection("users")
+    db.collection('users')
       .doc(user.email || undefined)
       .get()
       .then(function (doc) {
         if (doc.exists) {
           setAdminCallback((doc.data() as User).admin);
         } else {
-          db.collection("users")
+          db.collection('users')
             .doc(user.email || undefined)
             .set({
               admin: false,
