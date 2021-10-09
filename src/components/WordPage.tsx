@@ -1,7 +1,11 @@
 import React from 'react';
 import firebase from 'firebase/compat';
 
-import {PartOfSpeech, PARTS_OF_SPEECH, PARTS_OF_SPEECH_PROPERTIES} from 'utils/parts-of-speech';
+import {
+  PartOfSpeech,
+  PARTS_OF_SPEECH,
+  PARTS_OF_SPEECH_PROPERTIES,
+} from 'utils/parts-of-speech';
 import Database, {Article} from 'db';
 
 type Props = {
@@ -79,26 +83,28 @@ class WordPage extends React.Component<Props, State> {
               <th>Транслитерация</th>
               <td>{word.get('transliteration')}</td>
             </tr>
-            {(PARTS_OF_SPEECH_PROPERTIES[word.get('part_of_speech') as PartOfSpeech] || []).map(
-              (property) => (
-                <tr key={word.get('word') + '-' + property.key}>
-                  <th>{property.name}</th>
-                  <td>
-                    {word.get('properties') &&
-                    property.key in word.get('properties')
-                      ? Object.entries(word.get('properties')[property.key])
-                          .filter(([_, value]) => value)
-                          .map(
-                            ([key, _]) =>
-                              property.values.filter(
-                                (value) => value.key === key
-                              )[0].name
-                          )
-                      : '-'}
-                  </td>
-                </tr>
-              )
-            )}
+            {(
+              PARTS_OF_SPEECH_PROPERTIES[
+                word.get('part_of_speech') as PartOfSpeech
+              ] || []
+            ).map((property) => (
+              <tr key={word.get('word') + '-' + property.key}>
+                <th>{property.name}</th>
+                <td>
+                  {word.get('properties') &&
+                  property.key in word.get('properties')
+                    ? Object.entries(word.get('properties')[property.key])
+                        .filter(([_, value]) => value)
+                        .map(
+                          ([key, _]) =>
+                            property.values.filter(
+                              (value) => value.key === key
+                            )[0].name
+                        )
+                    : '-'}
+                </td>
+              </tr>
+            ))}
             <tr>
               <th>Альтернативные написания</th>
               <td>{word.get('spellings')}</td>

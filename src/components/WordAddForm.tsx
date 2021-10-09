@@ -275,8 +275,7 @@ class WordAddForm extends React.Component<Props, State> {
                   <br />
                   <div className="form-check form-check-inline">
                     {prop.values.map((value) => {
-                      let valueId =
-                        'prop-' + prop.key + '-value-' + value.key;
+                      let valueId = 'prop-' + prop.key + '-value-' + value.key;
                       return (
                         <React.Fragment key={valueId}>
                           <input

@@ -2,7 +2,7 @@ body {
   display: grid;
   margin: 0;
   height: 100%;
-  background: url("background.png") no-repeat center center fixed;
+  background: url('background.png') no-repeat center center fixed;
   background-size: cover;
   background-attachment: fixed;
 }
@@ -21,7 +21,7 @@ body {
 }
 
 .cta:before {
-  content: "";
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
@@ -123,7 +123,7 @@ button.btn.nav-link {
 
 button.btn.nav-link::after,
 button.btn.nav-link::before {
-  content: "";
+  content: '';
   display: block;
   position: absolute;
   width: 20%;
