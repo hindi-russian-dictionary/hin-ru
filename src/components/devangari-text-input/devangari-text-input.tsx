@@ -1,5 +1,6 @@
 import React from 'react';
-import {DEVANGARI_SYMBOLS} from '../utils/devangari';
+
+import {DEVANGARI_SYMBOLS} from 'utils/devangari';
 
 type Props = {
   defaultValue: string;

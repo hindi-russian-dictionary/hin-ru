@@ -1,13 +1,13 @@
 import React from 'react';
 import firebase from 'firebase/compat';
 
-import Database, {Article} from 'db';
-import MainPage from 'components/MainPage';
-import WordAddForm from 'components/WordAddForm';
-import WordPage from 'components/WordPage';
-import AboutUsPage from 'components/AboutUsPage';
+import Database, {Article} from 'lib/db';
+import MainPage from 'components/main-page/main-page';
+import WordAddForm from 'components/word-add-form/word-add-form';
+import WordPage from 'components/word-page/word-page';
+import AboutUsPage from 'components/about-us-page/about-us-page';
 
-import './App.css';
+import './app.css';
 
 type Route = 'main-page' | 'about-us' | 'add-word' | 'edit-word' | 'view-word';
 

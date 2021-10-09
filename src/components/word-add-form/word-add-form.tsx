@@ -1,13 +1,13 @@
 import React from 'react';
 import firebase from 'firebase/compat';
 
-import Database, {Article} from 'db';
+import Database, {Article} from 'lib/db';
 import {
   PARTS_OF_SPEECH,
   PARTS_OF_SPEECH_PROPERTIES,
   PartOfSpeech,
 } from 'utils/parts-of-speech';
-import DevanagariTextInput from 'components/Devanagari';
+import DevanagariTextInput from 'components/devangari-text-input/devangari-text-input';
 
 type Props = {
   word_id?: string;

@@ -6,7 +6,7 @@ import {
   PARTS_OF_SPEECH,
   PARTS_OF_SPEECH_PROPERTIES,
 } from 'utils/parts-of-speech';
-import Database, {Article} from 'db';
+import Database, {Article} from 'lib/db';
 
 type Props = {
   word: firebase.firestore.DocumentSnapshot<Article>;

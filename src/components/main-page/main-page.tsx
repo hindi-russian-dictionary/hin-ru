@@ -1,7 +1,7 @@
 import React from 'react';
 import firebase from 'firebase/compat';
 
-import {Article} from 'db';
+import {Article} from 'lib/db';
 
 type Props = {
   foundWords: firebase.firestore.QueryDocumentSnapshot<Article>[];
