@@ -1,5 +1,5 @@
 import React from 'react';
-import firebase from 'firebase/compat';
+import {User as FirebaseUser} from '@firebase/auth';
 
 import {Article} from 'lib/db';
 import {PARTS_OF_SPEECH, PartOfSpeech} from 'utils/parts-of-speech';
@@ -9,7 +9,7 @@ import {MeaningsForm} from 'components/meanings-form/meanings-form';
 
 type Props = {
   article?: Article;
-  user?: firebase.User;
+  user?: FirebaseUser;
   addWord: (article: Article) => Promise<string>;
   updateWord: (article: Article) => Promise<void>;
   routeToView: () => void;

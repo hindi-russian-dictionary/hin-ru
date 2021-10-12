@@ -1,5 +1,13 @@
 import React from 'react';
-import firebase from 'firebase/compat';
+import {
+  User as FirebaseUser,
+  getAuth,
+  signInWithPopup,
+  GoogleAuthProvider,
+  setPersistence,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+} from '@firebase/auth';
 
 import {Article, database} from 'lib/db';
 import {MainPage} from 'components/main-page/main-page';
@@ -14,16 +22,14 @@ type Route = 'main-page' | 'about-us' | 'add-word' | 'edit-word' | 'view-word';
 export const App: React.FC = () => {
   const [route, setRoute] = React.useState<Route>('main-page');
   const [loadedArticles, setLoadedArticles] = React.useState<Article[]>([]);
-  const [user, setUser] = React.useState<firebase.User>();
+  const [user, setUser] = React.useState<FirebaseUser>();
   const [isUserAdmin, setUserAdmin] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(-1);
-  const [firebaseAuth] = React.useState(() => firebase.auth());
+  const [auth] = React.useState(() => getAuth());
 
   const signIn = React.useCallback(async () => {
-    await firebaseAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    const result = await firebaseAuth.signInWithPopup(
-      new firebase.auth.GoogleAuthProvider()
-    );
+    await setPersistence(auth, {type: 'LOCAL'});
+    const result = await signInWithPopup(auth, new GoogleAuthProvider());
     if (result.user) {
       setUser(result.user);
       setUserAdmin(await database.fetchUserAdmin(result.user));
@@ -33,17 +39,17 @@ export const App: React.FC = () => {
   const signOut = React.useCallback(async () => {
     setUser(undefined);
     setUserAdmin(false);
-    await firebaseAuth.signOut();
-  }, [setUser, setUserAdmin, firebaseAuth]);
+    await firebaseSignOut(auth);
+  }, [setUser, setUserAdmin, auth]);
 
   const initialAuthorize = React.useCallback(() => {
-    return firebaseAuth.onAuthStateChanged(async (user) => {
+    return onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUser(user);
         setUserAdmin(await database.fetchUserAdmin(user));
       }
     });
-  }, [database, firebaseAuth, setUser, setUserAdmin]);
+  }, [database, auth, setUser, setUserAdmin]);
 
   React.useEffect(() => initialAuthorize(), [initialAuthorize]);
 

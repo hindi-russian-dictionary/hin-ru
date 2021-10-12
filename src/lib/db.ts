@@ -1,5 +1,26 @@
-import firebase from 'firebase/compat';
+import {initializeApp} from '@firebase/app';
+import {User as FirebaseUser} from '@firebase/auth';
+import {
+  addDoc,
+  collection,
+  CollectionReference,
+  doc,
+  endAt,
+  Firestore,
+  getDoc,
+  getDocs,
+  getFirestore,
+  limit,
+  orderBy,
+  query,
+  QueryConstraint,
+  startAt,
+  UpdateData,
+  updateDoc,
+  where,
+} from '@firebase/firestore';
 import {PartOfSpeech} from 'utils/parts-of-speech';
+import {FirebaseOptions} from '@firebase/app';
 
 export type Article = {
   id: string;
@@ -35,13 +56,13 @@ type User = {
   moderator: boolean;
 };
 
-let firestore: firebase.firestore.Firestore;
+let firestoreInstance: Firestore;
 export const database = {
   init: () => {
     if (!process.env.REACT_APP_FIREBASE_API_KEY) {
       throw new Error('No Firebase config found!');
     }
-    const config = {
+    const config: FirebaseOptions = {
       apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
       authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
       databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
@@ -51,57 +72,66 @@ export const database = {
       appId: process.env.REACT_APP_FIREBASE_APP_ID,
       measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
     };
-    if (!firebase.apps.length) {
-      firebase.initializeApp(config);
-    }
-    firestore = firebase.firestore();
+    initializeApp(config);
+    firestoreInstance = getFirestore();
   },
 
   addArticle: async (article: Article): Promise<string> => {
-    const doc = await firestore.collection('articles').add(article);
-    return doc.id;
+    const collectionReference = (await collection(
+      firestoreInstance,
+      'articles'
+    )) as CollectionReference<Article>;
+    const docReference = await addDoc(collectionReference, article);
+    return docReference.id;
   },
 
   updateArticle: async ({
     id,
     ...article
   }: Partial<Article>): Promise<void> => {
-    await firestore.collection('articles').doc(id).update(article);
+    const collectionReference = (await collection(
+      firestoreInstance,
+      'articles'
+    )) as CollectionReference<Article>;
+    const docReference = await doc(collectionReference, id);
+    await updateDoc(docReference, article as UpdateData<Article>);
   },
 
   lookupArticles: async (
     lookup: string,
     isAdmin: boolean
   ): Promise<Article[]> => {
-    let collection = (
-      firestore.collection(
-        'articles'
-      ) as firebase.firestore.CollectionReference<Article>
-    ).orderBy('word');
-    if (!isAdmin) {
-      collection = collection.where('approved', '==', true);
-    }
-    const snapshot = await collection
-      .startAt(lookup)
-      .endAt(lookup + '\uf8ff')
-      .limit(15)
-      .get();
-    return snapshot.docs.map((doc) => ({
+    const collectionReference = (await collection(
+      firestoreInstance,
+      'articles'
+    )) as CollectionReference<Article>;
+    const constraints = [
+      orderBy('word'),
+      isAdmin ? null : where('approved', '==', true),
+      startAt(lookup),
+      endAt(lookup + '\uf8ff'),
+      limit(15),
+    ].filter((x): x is QueryConstraint => Boolean(x));
+    const queryReference = query(collectionReference, ...constraints);
+    const docsSnapshots = await getDocs(queryReference);
+    return docsSnapshots.docs.map((doc) => ({
       ...doc.data(),
       id: doc.id,
     }));
   },
 
-  fetchUserAdmin: async (user: firebase.User): Promise<boolean> => {
-    const collection = firestore.collection(
+  fetchUserAdmin: async (user: FirebaseUser): Promise<boolean> => {
+    const collectionReference = (await collection(
+      firestoreInstance,
       'users'
-    ) as firebase.firestore.CollectionReference<User>;
+    )) as CollectionReference<User>;
     const email = user.email || undefined;
-    const doc = await collection.doc(email).get();
-    if (doc.exists) {
-      return Boolean(doc.data()?.admin);
+    const docReference = await doc(collectionReference, email);
+    const docData = await getDoc(docReference);
+    if (docData.exists()) {
+      return Boolean(docData.data().admin);
     } else {
-      await collection.doc(email).set({admin: false, moderator: false});
+      await updateDoc(docReference, {admin: false, moderator: false});
       return false;
     }
   },
