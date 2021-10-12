@@ -10,7 +10,7 @@ type Props = {
   article: Article;
   isAdmin: boolean;
   routeToEdit: () => void;
-  updateWord: (article: Article) => Promise<void>;
+  updateArticle: (article: Article) => Promise<void>;
 };
 
 export const WordPage: React.FC<Props> = (props) => {
@@ -20,9 +20,9 @@ export const WordPage: React.FC<Props> = (props) => {
 
   const switchApproval = React.useCallback<() => void>(async () => {
     const nextApproval = !wordApproved;
-    await props.updateWord({...props.article, approved: nextApproval});
+    await props.updateArticle({...props.article, approved: nextApproval});
     setWordApproved(nextApproval);
-  }, [props.updateWord, setWordApproved, props.article, wordApproved]);
+  }, [props.updateArticle, setWordApproved, props.article, wordApproved]);
 
   return (
     <>

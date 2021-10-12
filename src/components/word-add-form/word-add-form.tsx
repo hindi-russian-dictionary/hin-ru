@@ -9,9 +9,9 @@ import {MeaningsForm} from 'components/meanings-form/meanings-form';
 
 type Props = {
   article?: Article;
-  user?: FirebaseUser;
-  addWord: (article: Article) => Promise<string>;
-  updateWord: (article: Article) => Promise<void>;
+  user: FirebaseUser | null;
+  addArticle: (article: Article) => Promise<string>;
+  updateArticle: (article: Article) => Promise<void>;
   routeToView: () => void;
 };
 
@@ -110,14 +110,14 @@ export const WordAddForm: React.FC<Props> = (props) => {
       e.preventDefault();
       setUploadStatus('pending');
       try {
-        await props.addWord(getUpdatedWord());
+        await props.addArticle(getUpdatedWord());
         setUploadStatus('success');
         props.routeToView();
       } catch (e) {
         setUploadStatus('error');
       }
     },
-    [setUploadStatus, props.addWord, getUpdatedWord, props.routeToView]
+    [setUploadStatus, props.addArticle, getUpdatedWord, props.routeToView]
   );
 
   const editWord = React.useCallback<React.FormEventHandler<HTMLFormElement>>(
@@ -128,14 +128,14 @@ export const WordAddForm: React.FC<Props> = (props) => {
       }
       setUploadStatus('pending');
       try {
-        await props.updateWord(getUpdatedWord());
+        await props.updateArticle(getUpdatedWord());
         setUploadStatus('success');
         props.routeToView();
       } catch (e) {
         setUploadStatus('error');
       }
     },
-    [setUploadStatus, props.updateWord, getUpdatedWord, props.routeToView]
+    [setUploadStatus, props.updateArticle, getUpdatedWord, props.routeToView]
   );
 
   return (

@@ -1,13 +1,5 @@
 import React from 'react';
-import {
-  User as FirebaseUser,
-  getAuth,
-  signInWithPopup,
-  GoogleAuthProvider,
-  setPersistence,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-} from '@firebase/auth';
+import {useAsyncEffect} from 'use-async-effect';
 
 import {Article, database} from 'lib/db';
 import {MainPage} from 'components/main-page/main-page';
@@ -15,66 +7,71 @@ import {WordAddForm} from 'components/word-add-form/word-add-form';
 import {WordPage} from 'components/word-page/word-page';
 import {AboutUsPage} from 'components/about-us-page/about-us-page';
 
+import {useUserControls} from 'hooks/useUserControls';
+import {useFirestore} from 'hooks/useFirestore';
+
 import './app.css';
 
 type Route = 'main-page' | 'about-us' | 'add-word' | 'edit-word' | 'view-word';
 
 export const App: React.FC = () => {
+  const firestore = useFirestore();
+
   const [route, setRoute] = React.useState<Route>('main-page');
   const [loadedArticles, setLoadedArticles] = React.useState<Article[]>([]);
-  const [user, setUser] = React.useState<FirebaseUser>();
   const [isUserAdmin, setUserAdmin] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(-1);
-  const [auth] = React.useState(() => getAuth());
 
-  const signIn = React.useCallback(async () => {
-    await setPersistence(auth, {type: 'LOCAL'});
-    const result = await signInWithPopup(auth, new GoogleAuthProvider());
-    if (result.user) {
-      setUser(result.user);
-      setUserAdmin(await database.fetchUserAdmin(result.user));
-    }
-  }, [setUser, setUserAdmin]);
-
-  const signOut = React.useCallback(async () => {
-    setUser(undefined);
-    setUserAdmin(false);
-    await firebaseSignOut(auth);
-  }, [setUser, setUserAdmin, auth]);
-
-  const initialAuthorize = React.useCallback(() => {
-    return onAuthStateChanged(auth, async (user) => {
+  const {user, signIn, signOut} = useUserControls();
+  useAsyncEffect(
+    async (isMounted) => {
       if (user) {
-        setUser(user);
-        setUserAdmin(await database.fetchUserAdmin(user));
+        const isAdmin = await database.fetchUserAdmin(firestore, user);
+        if (isMounted()) {
+          setUserAdmin(isAdmin);
+        }
+      } else {
+        setUserAdmin(false);
       }
-    });
-  }, [database, auth, setUser, setUserAdmin]);
+    },
+    [firestore, user, setUserAdmin]
+  );
 
-  React.useEffect(() => initialAuthorize(), [initialAuthorize]);
-
-  const viewWord = React.useCallback<(id: string) => void>(
+  const openArticlePage = React.useCallback<(id: string) => void>(
     (id) => {
-      setSelectedIndex(loadedArticles.findIndex((word) => word.id === id));
+      setSelectedIndex(
+        loadedArticles.findIndex((article) => article.id === id)
+      );
       setRoute('view-word');
     },
     [loadedArticles, setSelectedIndex, setRoute]
   );
 
-  const editWord = React.useCallback(() => {
+  const editArticle = React.useCallback(() => {
     setRoute('edit-word');
   }, [setRoute]);
 
-  const onWordEditDone = React.useCallback(() => {
+  const onArticleEditDone = React.useCallback(() => {
     setSelectedIndex(-1);
     setRoute('view-word');
   }, [setSelectedIndex, setRoute]);
 
-  const searchWord = React.useCallback(
+  const lookupArticle = React.useCallback(
     async (term: string) => {
-      setLoadedArticles(await database.lookupArticles(term, isUserAdmin));
+      setLoadedArticles(
+        await database.lookupArticles(firestore, term, isUserAdmin)
+      );
     },
-    [setLoadedArticles, database, isUserAdmin]
+    [setLoadedArticles, firestore, isUserAdmin]
+  );
+
+  const addArticle = React.useCallback(
+    (article: Article) => database.addArticle(firestore, article),
+    [firestore]
+  );
+  const updateArticle = React.useCallback(
+    (article: Article) => database.updateArticle(firestore, article),
+    [firestore]
   );
 
   const selectedArticle = loadedArticles[selectedIndex];
@@ -88,9 +85,9 @@ export const App: React.FC = () => {
           <WordAddForm
             article={selectedArticle}
             user={user}
-            routeToView={onWordEditDone}
-            addWord={database.addArticle}
-            updateWord={database.updateArticle}
+            routeToView={onArticleEditDone}
+            addArticle={addArticle}
+            updateArticle={updateArticle}
           />
         );
       case 'view-word':
@@ -101,16 +98,16 @@ export const App: React.FC = () => {
           <WordPage
             article={selectedArticle}
             isAdmin={isUserAdmin}
-            routeToEdit={editWord}
-            updateWord={database.updateArticle}
+            routeToEdit={editArticle}
+            updateArticle={updateArticle}
           />
         );
       default:
         return (
           <MainPage
             articles={loadedArticles}
-            lookupArticle={searchWord}
-            openArticlePage={viewWord}
+            lookupArticle={lookupArticle}
+            openArticlePage={openArticlePage}
           />
         );
     }
@@ -118,12 +115,14 @@ export const App: React.FC = () => {
     route,
     user,
     selectedArticle,
-    onWordEditDone,
+    onArticleEditDone,
     isUserAdmin,
-    editWord,
+    editArticle,
     loadedArticles,
-    viewWord,
-    searchWord,
+    openArticlePage,
+    lookupArticle,
+    addArticle,
+    updateArticle,
   ]);
 
   return (
