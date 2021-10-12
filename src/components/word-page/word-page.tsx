@@ -4,35 +4,50 @@ import {
   PARTS_OF_SPEECH,
   PARTS_OF_SPEECH_PROPERTIES,
 } from 'utils/parts-of-speech';
-import {Article} from 'lib/db';
+import {useNavigate, useParams} from 'react-router-dom';
+import {useUserControls} from 'hooks/useUserControls';
+import {useArticle} from 'hooks/useArticle';
+import {useUpdateArticle} from 'hooks/useUpdateArticle';
 
-type Props = {
-  article: Article;
-  isAdmin: boolean;
-  routeToEdit: () => void;
-  updateArticle: (article: Article) => Promise<void>;
-};
+export const WordPage: React.FC = () => {
+  const params = useParams<'word'>();
+  const article = useArticle(params.word || '');
 
-export const WordPage: React.FC<Props> = (props) => {
+  const navigate = useNavigate();
+  const editArticle = React.useCallback(() => {
+    navigate(`/article/${params.word}/edit`);
+  }, [navigate, params.word]);
+
+  const updateArticle = useUpdateArticle();
+
+  const {isUserAdmin} = useUserControls();
+
   const [wordApproved, setWordApproved] = React.useState(() =>
-    Boolean(props.article?.approved)
+    Boolean(article?.approved)
   );
 
   const switchApproval = React.useCallback<() => void>(async () => {
+    if (!article) {
+      return;
+    }
     const nextApproval = !wordApproved;
-    await props.updateArticle({...props.article, approved: nextApproval});
+    await updateArticle({...article, approved: nextApproval});
     setWordApproved(nextApproval);
-  }, [props.updateArticle, setWordApproved, props.article, wordApproved]);
+  }, [updateArticle, setWordApproved, article, wordApproved]);
+
+  if (!article) {
+    return <div>404</div>;
+  }
 
   return (
     <>
-      {props.isAdmin ? (
-        <button className="btn btn-info" onClick={props.routeToEdit}>
+      {isUserAdmin ? (
+        <button className="btn btn-info" onClick={editArticle}>
           Редактировать (осторожно, вы админ)
         </button>
       ) : null}
       &nbsp;
-      {props.isAdmin ? (
+      {isUserAdmin ? (
         <button
           className={`btn ${wordApproved ? 'btn-danger' : 'btn-success'}`}
           onClick={switchApproval}
@@ -40,24 +55,24 @@ export const WordPage: React.FC<Props> = (props) => {
           {wordApproved ? 'Разодобрить :(' : 'Одобрить!'}
         </button>
       ) : null}
-      <h1>{props.article.word}</h1>
+      <h1>{article.word}</h1>
       <table className="table">
         <tbody>
           <tr>
             <th>Часть речи</th>
-            <td>{PARTS_OF_SPEECH[props.article.part_of_speech]}</td>
+            <td>{PARTS_OF_SPEECH[article.part_of_speech]}</td>
           </tr>
           <tr>
             <th>Транслитерация</th>
-            <td>{props.article.transliteration}</td>
+            <td>{article.transliteration}</td>
           </tr>
-          {(PARTS_OF_SPEECH_PROPERTIES[props.article.part_of_speech] || []).map(
+          {(PARTS_OF_SPEECH_PROPERTIES[article.part_of_speech] || []).map(
             (property) => (
               <tr key={property.key}>
                 <th>{property.name}</th>
                 <td>
-                  {props.article.properties?.[property.key]
-                    ? Object.entries(props.article.properties?.[property.key])
+                  {article.properties?.[property.key]
+                    ? Object.entries(article.properties?.[property.key])
                         .filter(([_, value]) => Boolean(value))
                         .map(
                           ([key]) =>
@@ -71,14 +86,14 @@ export const WordPage: React.FC<Props> = (props) => {
           )}
           <tr>
             <th>Альтернативные написания</th>
-            <td>{props.article.spellings}</td>
+            <td>{article.spellings}</td>
           </tr>
           <tr>
             <th>Значения</th>
             <td>
               <table className="table">
                 <tbody>
-                  {props.article.meanings.map((meaning) => (
+                  {article.meanings.map((meaning) => (
                     <tr key={meaning.meaning}>
                       <td>{meaning.meaning}</td>
                       <td>{meaning.examples}</td>
@@ -90,22 +105,22 @@ export const WordPage: React.FC<Props> = (props) => {
           </tr>
           <tr>
             <th>Управление</th>
-            <td>{props.article.control.hin}</td>
-            <td>{props.article.control.rus}</td>
+            <td>{article.control.hin}</td>
+            <td>{article.control.rus}</td>
           </tr>
           <tr>
             <th>Устойчивые словосочетания</th>
-            <td>{props.article.stable_phrases.hin}</td>
-            <td>{props.article.stable_phrases.rus}</td>
+            <td>{article.stable_phrases.hin}</td>
+            <td>{article.stable_phrases.rus}</td>
           </tr>
           <tr>
             <th>Примеры</th>
-            <td>{props.article.examples.hin}</td>
-            <td>{props.article.examples.rus}</td>
+            <td>{article.examples.hin}</td>
+            <td>{article.examples.rus}</td>
           </tr>
           <tr>
             <th>Заимствовано из</th>
-            <td>{props.article.taken_from}</td>
+            <td>{article.taken_from}</td>
           </tr>
         </tbody>
       </table>

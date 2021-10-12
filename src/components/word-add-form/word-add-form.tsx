@@ -1,172 +1,154 @@
 import React from 'react';
-import {User as FirebaseUser} from '@firebase/auth';
 
 import {Article} from 'lib/db';
 import {PARTS_OF_SPEECH, PartOfSpeech} from 'utils/parts-of-speech';
 import {DevanagariTextInput} from 'components/devangari-text-input/devangari-text-input';
 import {PropertiesForm} from 'components/properties-form/properties-form';
 import {MeaningsForm} from 'components/meanings-form/meanings-form';
-
-type Props = {
-  article?: Article;
-  user: FirebaseUser | null;
-  addArticle: (article: Article) => Promise<string>;
-  updateArticle: (article: Article) => Promise<void>;
-  routeToView: () => void;
-};
+import {useOpenArticlePage} from 'hooks/useOpenArticlePage';
+import {useUserControls} from 'hooks/useUserControls';
+import {useArticle} from 'hooks/useArticle';
+import {useParams} from 'react-router-dom';
+import {useUpdateArticle} from 'hooks/useUpdateArticle';
+import {useAddArticle} from 'hooks/useAddArticle';
+import {getNextValue} from 'utils/react-utils';
 
 type UploadStatus = 'not_started' | 'pending' | 'success' | 'error';
 
-export const WordAddForm: React.FC<Props> = (props) => {
+const getEmptyArticle = (): Article => ({
+  id: 'temporary',
+  status: 'draft',
+  word: '',
+  transliteration: '',
+  spellings: [],
+  part_of_speech: 'noun',
+  properties: {},
+  meanings: [],
+  control: {
+    hin: '',
+    rus: '',
+  },
+  stable_phrases: {
+    hin: '',
+    rus: '',
+  },
+  examples: {
+    hin: '',
+    rus: '',
+  },
+  taken_from: 'ниоткуда',
+});
+
+export const WordAddForm: React.FC = () => {
+  const openArticlePage = useOpenArticlePage();
+
+  const params = useParams<'word'>();
+  const article = useArticle(params.word || '');
+  const addArticle = useAddArticle();
+  const updateArticle = useUpdateArticle();
+
+  const {user} = useUserControls();
+
   const [uploadStatus, setUploadStatus] =
     React.useState<UploadStatus>('not_started');
 
-  const [word, setWord] = React.useState(() =>
-    props.article ? props.article.word : ''
+  const [localArticle, setLocalArticle] = React.useState<Article>(
+    article || getEmptyArticle()
   );
-  const [transliteration, setTransliteration] = React.useState(() =>
-    props.article ? props.article.transliteration : ''
-  );
-  const [spellings, setSpellings] = React.useState(() =>
-    props.article ? props.article.spellings.join(',') : ''
-  );
-  const [partOfSpeech, setPartOfSpeech] = React.useState<PartOfSpeech>(() =>
-    props.article ? props.article.part_of_speech : 'noun'
-  );
-  const [properties, setProperties] = React.useState<Article['properties']>(
-    () => (props.article ? props.article.properties : {})
-  );
-  const [meanings, setMeanings] = React.useState(() =>
-    props.article ? props.article.meanings : []
-  );
-  const [controlHindi, setControlHindi] = React.useState(() =>
-    props.article ? props.article.control.hin : ''
-  );
-  const [controlRussian, setControlRussian] = React.useState(() =>
-    props.article ? props.article.control.rus : ''
-  );
-  const [stablePhrasesHindi, setStablePhrasesHindi] = React.useState(() =>
-    props.article ? props.article.stable_phrases.hin : ''
-  );
-  const [stablePhrasesRussian, setStablePhrasesRussian] = React.useState(() =>
-    props.article ? props.article.stable_phrases.rus : ''
-  );
-  const [examplesHindi, setExamplesHindi] = React.useState(() =>
-    props.article ? props.article.examples.hin : ''
-  );
-  const [examplesRussian, setExamplesRussian] = React.useState(() =>
-    props.article ? props.article.examples.rus : ''
-  );
-  const [takenFrom, setTakenFrom] = React.useState(() =>
-    props.article ? props.article.taken_from : 'ниоткуда'
-  );
-
-  const getUpdatedWord = React.useCallback<() => Article>(
-    () => ({
-      id: props.article?.id ?? '',
-      word,
-      transliteration,
-      spellings: spellings.split(','),
-      part_of_speech: partOfSpeech,
-      meanings,
-      properties,
-      taken_from: takenFrom,
-      control: {
-        rus: controlRussian,
-        hin: controlHindi,
-      },
-      stable_phrases: {
-        rus: stablePhrasesRussian,
-        hin: stablePhrasesHindi,
-      },
-      examples: {
-        rus: examplesRussian,
-        hin: examplesHindi,
-      },
-      status: 'draft',
-      author: props.user?.email || undefined,
-    }),
-    [
-      props.article,
-      props.user,
-      word,
-      transliteration,
-      spellings,
-      partOfSpeech,
-      meanings,
-      properties,
-      controlHindi,
-      controlRussian,
-      stablePhrasesRussian,
-      stablePhrasesHindi,
-      examplesHindi,
-      examplesRussian,
-      takenFrom,
-    ]
-  );
+  React.useEffect(() => {
+    if (article) {
+      setLocalArticle(article);
+    }
+  }, [article, setLocalArticle]);
 
   const addWord = React.useCallback<React.FormEventHandler<HTMLFormElement>>(
     async (e) => {
       e.preventDefault();
       setUploadStatus('pending');
       try {
-        await props.addArticle(getUpdatedWord());
+        const id = await addArticle({
+          ...localArticle,
+          author: user?.email || undefined,
+        });
+        setLocalArticle((prev) => ({...prev, id}));
         setUploadStatus('success');
-        props.routeToView();
+        openArticlePage(localArticle.word);
       } catch (e) {
         setUploadStatus('error');
       }
     },
-    [setUploadStatus, props.addArticle, getUpdatedWord, props.routeToView]
+    [
+      setUploadStatus,
+      addArticle,
+      localArticle,
+      setLocalArticle,
+      openArticlePage,
+      user,
+    ]
   );
 
   const editWord = React.useCallback<React.FormEventHandler<HTMLFormElement>>(
     async (e) => {
       e.preventDefault();
-      if (!props.article) {
-        return;
-      }
       setUploadStatus('pending');
       try {
-        await props.updateArticle(getUpdatedWord());
+        await updateArticle(localArticle);
         setUploadStatus('success');
-        props.routeToView();
+        openArticlePage(localArticle.word);
       } catch (e) {
         setUploadStatus('error');
       }
     },
-    [setUploadStatus, props.updateArticle, getUpdatedWord, props.routeToView]
+    [setUploadStatus, updateArticle, localArticle, openArticlePage]
+  );
+
+  const updateLocalArticle = React.useCallback(
+    function <K extends keyof Article>(
+      key: K,
+      action: React.SetStateAction<Article[K]>
+    ) {
+      setLocalArticle((prev) => ({
+        ...prev,
+        [key]: getNextValue(prev[key], action),
+      }));
+    },
+    [setLocalArticle]
   );
 
   return (
     <div className="row my-4">
       <div className="col-12">
-        {`Автор ${
-          props.article?.author ? `- ${props.article.author}` : 'неизвестен'
-        }`}
-        <form onSubmit={props.article ? editWord : addWord}>
+        {`Автор ${article?.author ? `- ${article.author}` : 'неизвестен'}`}
+        <form onSubmit={article ? editWord : addWord}>
           <div className="form-group">
             <label htmlFor="word">Слово</label>
             <DevanagariTextInput
               placeholder="हिंदी"
-              value={word}
-              setValue={setWord}
+              value={localArticle.word}
+              setValue={(value) => updateLocalArticle('word', value)}
             />
           </div>
           <div className="form-group">
             <label htmlFor="transliteration">Транслитерация</label>
             <DevanagariTextInput
               placeholder="hindi"
-              value={transliteration}
-              setValue={setTransliteration}
+              value={localArticle.transliteration}
+              setValue={(value) => updateLocalArticle('transliteration', value)}
             />
           </div>
           <div className="form-group">
             <label htmlFor="spellings">Альтернативные написания</label>
             <DevanagariTextInput
               placeholder="हिंदी, हिन्दी"
-              value={spellings}
-              setValue={setSpellings}
+              value={localArticle.spellings.join(',')}
+              setValue={(value) =>
+                updateLocalArticle('spellings', (prev) =>
+                  (typeof value === 'function'
+                    ? value(prev.join(','))
+                    : value
+                  ).split(',')
+                )
+              }
             />
           </div>
           <div className="form-group">
@@ -174,10 +156,13 @@ export const WordAddForm: React.FC<Props> = (props) => {
             <select
               className="form-control"
               id="part_of_speech"
+              value={localArticle.part_of_speech}
               onChange={(e) =>
-                setPartOfSpeech(e.currentTarget.value as PartOfSpeech)
+                updateLocalArticle(
+                  'part_of_speech',
+                  e.currentTarget.value as PartOfSpeech
+                )
               }
-              value={partOfSpeech}
             >
               {Object.entries(PARTS_OF_SPEECH).map(([key, value]) => (
                 <option key={key} value={key}>
@@ -188,13 +173,18 @@ export const WordAddForm: React.FC<Props> = (props) => {
           </div>
           <hr />
           <PropertiesForm
-            partOfSpeech={partOfSpeech}
-            properties={properties}
-            setProperties={setProperties}
+            partOfSpeech={localArticle.part_of_speech}
+            properties={localArticle.properties}
+            setProperties={(props) => updateLocalArticle('properties', props)}
           />
           <hr />
           <div className="form-group">
-            <MeaningsForm meanings={meanings} setMeanings={setMeanings} />
+            <MeaningsForm
+              meanings={localArticle.meanings}
+              setMeanings={(meanings) =>
+                updateLocalArticle('meanings', meanings)
+              }
+            />
           </div>
           <div className="form-group">
             <label htmlFor="control_rus">Управление</label>
@@ -204,8 +194,13 @@ export const WordAddForm: React.FC<Props> = (props) => {
                 id="control_hin"
                 rows={3}
                 placeholder="на хинди"
-                onChange={(e) => setControlHindi(e.currentTarget.value)}
-                value={controlHindi}
+                value={localArticle.control.hin}
+                onChange={(e) =>
+                  updateLocalArticle('control', (prev) => ({
+                    ...prev,
+                    hin: e.currentTarget.value,
+                  }))
+                }
               />
               <textarea
                 className="form-control"
@@ -213,8 +208,13 @@ export const WordAddForm: React.FC<Props> = (props) => {
                 rows={3}
                 placeholder="на русском"
                 required
-                onChange={(e) => setControlRussian(e.currentTarget.value)}
-                value={controlRussian}
+                value={localArticle.control.rus}
+                onChange={(e) =>
+                  updateLocalArticle('control', (prev) => ({
+                    ...prev,
+                    rus: e.currentTarget.value,
+                  }))
+                }
               />
             </div>
           </div>
@@ -228,8 +228,13 @@ export const WordAddForm: React.FC<Props> = (props) => {
                 id="stable_phrases_hin"
                 rows={3}
                 placeholder="на хинди"
-                onChange={(e) => setStablePhrasesHindi(e.currentTarget.value)}
-                value={stablePhrasesHindi}
+                value={localArticle.stable_phrases.hin}
+                onChange={(e) =>
+                  updateLocalArticle('stable_phrases', (prev) => ({
+                    ...prev,
+                    hin: e.currentTarget.value,
+                  }))
+                }
               />
               <textarea
                 className="form-control"
@@ -237,8 +242,13 @@ export const WordAddForm: React.FC<Props> = (props) => {
                 rows={3}
                 placeholder="на русском"
                 required
-                onChange={(e) => setStablePhrasesRussian(e.currentTarget.value)}
-                value={stablePhrasesRussian}
+                value={localArticle.stable_phrases.rus}
+                onChange={(e) =>
+                  updateLocalArticle('stable_phrases', (prev) => ({
+                    ...prev,
+                    rus: e.currentTarget.value,
+                  }))
+                }
               />
             </div>
           </div>
@@ -250,8 +260,13 @@ export const WordAddForm: React.FC<Props> = (props) => {
                 id="examples_hin"
                 rows={3}
                 placeholder="на хинди"
-                onChange={(e) => setExamplesHindi(e.currentTarget.value)}
-                value={examplesHindi}
+                value={localArticle.examples.hin}
+                onChange={(e) =>
+                  updateLocalArticle('examples', (prev) => ({
+                    ...prev,
+                    hin: e.currentTarget.value,
+                  }))
+                }
               />
               <textarea
                 className="form-control"
@@ -259,8 +274,13 @@ export const WordAddForm: React.FC<Props> = (props) => {
                 rows={3}
                 placeholder="на русском"
                 required
-                onChange={(e) => setExamplesRussian(e.currentTarget.value)}
-                value={examplesRussian}
+                value={localArticle.examples.rus}
+                onChange={(e) =>
+                  updateLocalArticle('examples', (prev) => ({
+                    ...prev,
+                    rus: e.currentTarget.value,
+                  }))
+                }
               />
             </div>
           </div>
@@ -269,8 +289,10 @@ export const WordAddForm: React.FC<Props> = (props) => {
             <select
               className="form-control"
               id="taken_from"
-              onChange={(e) => setTakenFrom(e.currentTarget.value)}
-              value={takenFrom}
+              value={localArticle.taken_from}
+              onChange={(e) =>
+                updateLocalArticle('taken_from', e.currentTarget.value)
+              }
             >
               <option value="ниоткуда">ниоткуда</option>
               <option value="санскрит">санскрит</option>

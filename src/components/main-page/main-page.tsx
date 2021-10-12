@@ -1,22 +1,20 @@
 import React from 'react';
 
-import {Article} from 'lib/db';
+import {useOpenArticlePage} from 'hooks/useOpenArticlePage';
+import {useLookupArticles} from 'hooks/useLookupArticles';
 
-type Props = {
-  articles: Article[];
-  lookupArticle: (term: string) => void;
-  openArticlePage: (id: string) => void;
-};
-
-export const MainPage: React.FC<Props> = (props) => {
+export const MainPage: React.FC = () => {
+  const openArticlePage = useOpenArticlePage();
   const [term, setTerm] = React.useState('');
+  const [fixedTerm, setFixedTerm] = React.useState('');
+  const articles = useLookupArticles(fixedTerm);
   const onKeyDown = React.useCallback<React.KeyboardEventHandler>(
     (event) => {
       if (event.key === 'Enter') {
-        props.lookupArticle(term);
+        setFixedTerm(term);
       }
     },
-    [props.lookupArticle, term]
+    [setFixedTerm, term]
   );
 
   return (
@@ -46,12 +44,12 @@ export const MainPage: React.FC<Props> = (props) => {
       </div>
       <div className="col-12">
         <div className="list-group">
-          {props.articles.map((article) => (
+          {articles.map((article) => (
             <button
               key={article.id}
               type="button"
               className="list-group-item list-group-item-action"
-              onClick={() => props.openArticlePage(article.id)}
+              onClick={() => openArticlePage(article.word)}
             >
               {article.word}
               &nbsp; &nbsp; &nbsp;

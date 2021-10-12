@@ -56,7 +56,7 @@ type User = {
 export const database = {
   addArticle: async (
     firestore: Firestore,
-    article: Article
+    article: Omit<Article, 'id'>
   ): Promise<string> => {
     const collectionReference = (await collection(
       firestore,
@@ -76,6 +76,25 @@ export const database = {
     )) as CollectionReference<Article>;
     const docReference = await doc(collectionReference, id);
     await updateDoc(docReference, article as UpdateData<Article>);
+  },
+
+  getArticle: async (
+    firestore: Firestore,
+    word: string
+  ): Promise<Article | undefined> => {
+    const collectionReference = (await collection(
+      firestore,
+      'articles'
+    )) as CollectionReference<Article>;
+    const queryReference = await query(
+      collectionReference,
+      where('word', '==', word)
+    );
+    const docsSnapshots = await getDocs(queryReference);
+    return docsSnapshots.docs.map((doc) => ({
+      ...doc.data(),
+      id: doc.id,
+    }))[0];
   },
 
   lookupArticles: async (
