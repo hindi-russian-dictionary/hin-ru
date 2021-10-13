@@ -68,7 +68,7 @@ export const MeaningsForm: React.FC<Props> = (props) => {
       <label>Значения</label>
       {props.meanings.map((value, index) => {
         return (
-          <div className="input-group" key={value.meaning}>
+          <div className="input-group" key={index}>
             <textarea
               className="form-control"
               placeholder="хинди (язык)"

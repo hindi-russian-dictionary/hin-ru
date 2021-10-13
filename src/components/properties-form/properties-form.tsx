@@ -26,7 +26,7 @@ export const PropertiesForm: React.FC<Props> = (props) => {
     <>
       <label htmlFor="properties">Свойства</label>
       {(PARTS_OF_SPEECH_PROPERTIES[props.partOfSpeech] || []).map((prop) => (
-        <div className="form-group" key={'prop-' + prop.key}>
+        <div className="form-group" key={prop.key}>
           <label htmlFor={prop.key}>{prop.name}</label>
           <br />
           <div className="form-check form-check-inline">

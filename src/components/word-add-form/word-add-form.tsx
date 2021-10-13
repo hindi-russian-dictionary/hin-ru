@@ -115,6 +115,34 @@ export const WordAddForm: React.FC = () => {
     [setLocalArticle]
   );
 
+  const setProperties = React.useCallback<
+    React.Dispatch<React.SetStateAction<Article['properties']>>
+  >((props) => updateLocalArticle('properties', props), [updateLocalArticle]);
+  const setMeanings = React.useCallback<
+    React.Dispatch<React.SetStateAction<Article['meanings']>>
+  >(
+    (meanings) => updateLocalArticle('meanings', meanings),
+    [updateLocalArticle]
+  );
+  const setWord = React.useCallback<
+    React.Dispatch<React.SetStateAction<Article['word']>>
+  >((value) => updateLocalArticle('word', value), [updateLocalArticle]);
+  const setTransliteration = React.useCallback<
+    React.Dispatch<React.SetStateAction<Article['transliteration']>>
+  >(
+    (value) => updateLocalArticle('transliteration', value),
+    [updateLocalArticle]
+  );
+  const setSpellings = React.useCallback<
+    React.Dispatch<React.SetStateAction<string>>
+  >(
+    (value) =>
+      updateLocalArticle('spellings', (prev) =>
+        (typeof value === 'function' ? value(prev.join(',')) : value).split(',')
+      ),
+    [updateLocalArticle]
+  );
+
   return (
     <div className="row my-4">
       <div className="col-12">
@@ -125,7 +153,7 @@ export const WordAddForm: React.FC = () => {
             <DevanagariTextInput
               placeholder="हिंदी"
               value={localArticle.word}
-              setValue={(value) => updateLocalArticle('word', value)}
+              setValue={setWord}
             />
           </div>
           <div className="form-group">
@@ -133,7 +161,7 @@ export const WordAddForm: React.FC = () => {
             <DevanagariTextInput
               placeholder="hindi"
               value={localArticle.transliteration}
-              setValue={(value) => updateLocalArticle('transliteration', value)}
+              setValue={setTransliteration}
             />
           </div>
           <div className="form-group">
@@ -141,14 +169,7 @@ export const WordAddForm: React.FC = () => {
             <DevanagariTextInput
               placeholder="हिंदी, हिन्दी"
               value={localArticle.spellings.join(',')}
-              setValue={(value) =>
-                updateLocalArticle('spellings', (prev) =>
-                  (typeof value === 'function'
-                    ? value(prev.join(','))
-                    : value
-                  ).split(',')
-                )
-              }
+              setValue={setSpellings}
             />
           </div>
           <div className="form-group">
@@ -175,15 +196,13 @@ export const WordAddForm: React.FC = () => {
           <PropertiesForm
             partOfSpeech={localArticle.part_of_speech}
             properties={localArticle.properties}
-            setProperties={(props) => updateLocalArticle('properties', props)}
+            setProperties={setProperties}
           />
           <hr />
           <div className="form-group">
             <MeaningsForm
               meanings={localArticle.meanings}
-              setMeanings={(meanings) =>
-                updateLocalArticle('meanings', meanings)
-              }
+              setMeanings={setMeanings}
             />
           </div>
           <div className="form-group">
@@ -195,12 +214,13 @@ export const WordAddForm: React.FC = () => {
                 rows={3}
                 placeholder="на хинди"
                 value={localArticle.control.hin}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const nextValue = e.currentTarget.value;
                   updateLocalArticle('control', (prev) => ({
                     ...prev,
-                    hin: e.currentTarget.value,
-                  }))
-                }
+                    hin: nextValue,
+                  }));
+                }}
               />
               <textarea
                 className="form-control"
@@ -209,12 +229,13 @@ export const WordAddForm: React.FC = () => {
                 placeholder="на русском"
                 required
                 value={localArticle.control.rus}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const nextValue = e.currentTarget.value;
                   updateLocalArticle('control', (prev) => ({
                     ...prev,
-                    rus: e.currentTarget.value,
-                  }))
-                }
+                    rus: nextValue,
+                  }));
+                }}
               />
             </div>
           </div>
@@ -229,12 +250,13 @@ export const WordAddForm: React.FC = () => {
                 rows={3}
                 placeholder="на хинди"
                 value={localArticle.stable_phrases.hin}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const nextValue = e.currentTarget.value;
                   updateLocalArticle('stable_phrases', (prev) => ({
                     ...prev,
-                    hin: e.currentTarget.value,
-                  }))
-                }
+                    hin: nextValue,
+                  }));
+                }}
               />
               <textarea
                 className="form-control"
@@ -243,12 +265,13 @@ export const WordAddForm: React.FC = () => {
                 placeholder="на русском"
                 required
                 value={localArticle.stable_phrases.rus}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const nextValue = e.currentTarget.value;
                   updateLocalArticle('stable_phrases', (prev) => ({
                     ...prev,
-                    rus: e.currentTarget.value,
-                  }))
-                }
+                    rus: nextValue,
+                  }));
+                }}
               />
             </div>
           </div>
@@ -261,12 +284,13 @@ export const WordAddForm: React.FC = () => {
                 rows={3}
                 placeholder="на хинди"
                 value={localArticle.examples.hin}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const nextValue = e.currentTarget.value;
                   updateLocalArticle('examples', (prev) => ({
                     ...prev,
-                    hin: e.currentTarget.value,
-                  }))
-                }
+                    hin: nextValue,
+                  }));
+                }}
               />
               <textarea
                 className="form-control"
@@ -275,12 +299,13 @@ export const WordAddForm: React.FC = () => {
                 placeholder="на русском"
                 required
                 value={localArticle.examples.rus}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const nextValue = e.currentTarget.value;
                   updateLocalArticle('examples', (prev) => ({
                     ...prev,
-                    rus: e.currentTarget.value,
-                  }))
-                }
+                    rus: nextValue,
+                  }));
+                }}
               />
             </div>
           </div>
