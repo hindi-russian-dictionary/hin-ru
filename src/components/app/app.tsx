@@ -45,9 +45,7 @@ export const App: React.FC = () => {
       </nav>
       <div className="container">
         <Routes>
-          <Route path="/add">
-            <WordAddForm />
-          </Route>
+          <Route path="/add" element={<WordAddForm />} />
           <Route path="/article/:word/">
             <Route index element={<WordPage />} />
             <Route path="edit" element={<WordAddForm />} />
