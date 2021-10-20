@@ -8,52 +8,48 @@ import {useNavigate, useParams} from 'react-router-dom';
 import {useUserControls} from 'client/hooks/useUserControls';
 import {useArticleGroup} from 'client/hooks/useArticleGroup';
 import {useUpdateArticle} from 'client/hooks/useUpdateArticle';
-import {updateAtArray} from 'client/utils/array-utils';
 import {Article} from 'client/lib/db';
 
 export const WordPage: React.FC = () => {
   const params = useParams<'word'>();
-  const articles = useArticleGroup(params.word || '');
+  const [articleGroup, forceUpdateArticleGroup] = useArticleGroup(
+    params.word || ''
+  );
 
   const navigate = useNavigate();
   const editArticle = React.useCallback(
     (article: Article) => {
       navigate(`/article/${params.word}/edit/${article.id}/`);
     },
-    [navigate, params.word, articles]
+    [navigate, params.word, articleGroup]
   );
 
   const updateArticle = useUpdateArticle();
 
   const {isUserAdmin} = useUserControls();
 
-  const [wordsApproved, setWordsApproved] = React.useState(() =>
-    (articles || []).map((article) => Boolean(article?.approved))
-  );
-
   const switchApproval = React.useCallback<(index: number) => void>(
     async (index) => {
-      const article = articles?.[index];
+      const article = articleGroup?.[index];
       if (!article) {
         return;
       }
-      const nextApproval = !wordsApproved;
-      await updateArticle({...article, approved: nextApproval});
-      setWordsApproved((prev) => updateAtArray(prev, index, nextApproval));
+      await updateArticle({...article, approved: !article.approved});
+      forceUpdateArticleGroup();
     },
-    [updateArticle, setWordsApproved, articles, wordsApproved]
+    [updateArticle, articleGroup]
   );
 
-  if (!articles || articles.length === 0) {
+  if (!articleGroup || articleGroup.length === 0) {
     return <div>404</div>;
   }
 
   return (
     <>
-      {articles.length > 1 ? (
-        <div className="article-length">Всего слов: {articles.length}</div>
+      {articleGroup.length > 1 ? (
+        <div className="article-length">Всего слов: {articleGroup.length}</div>
       ) : null}
-      {articles.map((article, index) => (
+      {articleGroup.map((article, index) => (
         <div className="article" key={article.id}>
           {isUserAdmin ? (
             <button
@@ -66,10 +62,12 @@ export const WordPage: React.FC = () => {
           &nbsp;
           {isUserAdmin ? (
             <button
-              className={`btn ${wordsApproved ? 'btn-danger' : 'btn-success'}`}
+              className={`btn ${
+                article.approved ? 'btn-danger' : 'btn-success'
+              }`}
               onClick={() => switchApproval(index)}
             >
-              {wordsApproved ? 'Разодобрить :(' : 'Одобрить!'}
+              {article.approved ? 'Разодобрить :(' : 'Одобрить!'}
             </button>
           ) : null}
           <h1>{article.word}</h1>

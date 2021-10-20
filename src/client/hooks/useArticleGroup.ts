@@ -4,10 +4,13 @@ import {useFirestore} from 'client/hooks/useFirestore';
 import {useAsyncEffect} from 'use-async-effect';
 import {articlesCache} from 'client/utils/articles-cache';
 
-export const useArticleGroup = (word: string) => {
+export const useArticleGroup = (
+  word: string
+): [Article[] | null, () => void] => {
   const [articleGroup, setArticleGroup] = React.useState<Article[] | null>(
     null
   );
+  const [count, setCount] = React.useState(0);
   const firestore = useFirestore();
   useAsyncEffect(
     async (isMounted) => {
@@ -17,7 +20,7 @@ export const useArticleGroup = (word: string) => {
       let cachedArticles = Object.values(articlesCache).filter(
         (article) => article.word === word
       );
-      if (!cachedArticles) {
+      if (cachedArticles.length === 0) {
         const fetchedArticles = await database.getArticle(firestore, word);
         if (fetchedArticles) {
           fetchedArticles.forEach((fetchedArticle) => {
@@ -31,7 +34,11 @@ export const useArticleGroup = (word: string) => {
       }
       setArticleGroup(cachedArticles || null);
     },
-    [firestore, setArticleGroup, word]
+    [firestore, setArticleGroup, word, count]
   );
-  return articleGroup;
+  const forceUpdate = React.useCallback(
+    () => setCount((x) => x + 1),
+    [setCount]
+  );
+  return [articleGroup, forceUpdate];
 };

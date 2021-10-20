@@ -46,7 +46,7 @@ export const WordAddForm: React.FC = () => {
   );
 
   const params = useParams<'word' | 'id'>();
-  const articleGroup = useArticleGroup(params.word || '');
+  const [articleGroup] = useArticleGroup(params.word || '');
   const selectedArticle = articleGroup?.find(
     (article) => article.id === params.id
   );

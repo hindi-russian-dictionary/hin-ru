@@ -1,13 +1,14 @@
 import React from 'react';
-import {Link} from 'react-router-dom';
+import {Link, useSearchParams} from 'react-router-dom';
 
 import {useLookupArticles} from 'client/hooks/useLookupArticles';
 import {PARTS_OF_SPEECH} from 'client/utils/parts-of-speech';
 import {useSyncSearchQuery} from 'client/hooks/useSyncSearchQuery';
 
 export const MainPage: React.FC = () => {
-  const [term, setTerm] = React.useState('');
-  const [fixedTerm, setFixedTerm] = React.useState('');
+  const [searchParams] = useSearchParams();
+  const [term, setTerm] = React.useState(searchParams.get('query') || '');
+  const [fixedTerm, setFixedTerm] = React.useState(term);
   useSyncSearchQuery(fixedTerm);
   const articleGroups = useLookupArticles(fixedTerm);
   const onKeyDown = React.useCallback<React.KeyboardEventHandler>(
