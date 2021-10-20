@@ -8,14 +8,7 @@ export const useUpdateArticle = () => {
   return React.useCallback(
     async (article: Article) => {
       await database.updateArticle(firestore, article);
-      articlesCache[article.word] = articlesCache[article.word].map(
-        (lookupArticle) => {
-          if (lookupArticle.id === article.id) {
-            return article;
-          }
-          return lookupArticle;
-        }
-      );
+      articlesCache[article.id] = article;
     },
     [firestore]
   );

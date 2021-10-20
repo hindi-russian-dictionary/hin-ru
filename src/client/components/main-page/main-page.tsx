@@ -2,6 +2,7 @@ import React from 'react';
 import {Link} from 'react-router-dom';
 
 import {useLookupArticles} from 'client/hooks/useLookupArticles';
+import {PARTS_OF_SPEECH} from 'client/utils/parts-of-speech';
 
 export const MainPage: React.FC = () => {
   const [term, setTerm] = React.useState('');
@@ -47,25 +48,32 @@ export const MainPage: React.FC = () => {
             <Link
               key={articleGroup.map((article) => article.id).join(',')}
               type="button"
-              className="list-group-item list-group-item-action"
+              className="list-group-item list-group-item-action word-description"
               to={`/article/${articleGroup[0].word}`}
             >
-              {articleGroup[0].word}
-              {articleGroup.map((article) => (
-                <>
-                  &nbsp; &nbsp; &nbsp;
-                  <span
-                    className={
-                      'badge ' +
-                      (article.approved
-                        ? 'bg-success'
-                        : 'text-white bg-secondary')
-                    }
-                  >
-                    {article.approved ? 'одобрено' : 'черновик'}
-                  </span>
-                </>
-              ))}
+              <div className="word">{articleGroup[0].word}</div>
+              <div>
+                {articleGroup.map((article) => (
+                  <div className="word-element">
+                    &nbsp; &nbsp; &nbsp;
+                    {articleGroup.length > 1 ? (
+                      <span className="word-pos">
+                        {PARTS_OF_SPEECH[article.part_of_speech]}
+                      </span>
+                    ) : null}
+                    <span
+                      className={
+                        'badge ' +
+                        (article.approved
+                          ? 'bg-success'
+                          : 'text-white bg-secondary')
+                      }
+                    >
+                      {article.approved ? 'одобрено' : 'черновик'}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </Link>
           ))}
         </div>

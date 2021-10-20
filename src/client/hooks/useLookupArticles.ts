@@ -22,21 +22,30 @@ export const useLookupArticles = (term: string): Article[][] => {
           isUserAdmin
         );
         fetchedArticles.forEach((article) => {
-          if (!articlesCache[article.word]) {
-            articlesCache[article.word] = [];
-          }
-          articlesCache[article.word].push(article);
+          articlesCache[article.id] = article;
         });
-        lookupArticleCache[term] = fetchedArticles.map(
-          (article) => article.word
-        );
+        lookupArticleCache[term] = fetchedArticles.map((article) => article.id);
       }
       if (!isMounted()) {
         return;
       }
-      setArticles(lookupArticleCache[term].map((word) => articlesCache[word]));
+      setArticles(
+        groupByWord(lookupArticleCache[term].map((id) => articlesCache[id]))
+      );
     },
     [firestore, setArticles, isUserAdmin, term]
   );
   return articles;
 };
+
+function groupByWord(articles: Article[]): Article[][] {
+  return Object.values(
+    articles.reduce<Record<string, Article[]>>((acc, article) => {
+      if (!acc[article.word]) {
+        acc[article.word] = [];
+      }
+      acc[article.word].push(article);
+      return acc;
+    }, {})
+  );
+}

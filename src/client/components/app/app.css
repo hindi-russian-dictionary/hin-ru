@@ -164,3 +164,19 @@ button.btn.nav-link:hover:before {
 .article + .article {
   margin-top: 48px;
 }
+
+.word-description {
+  display: flex;
+}
+
+.word {
+  margin-right: 12px;
+}
+
+.word-element + .word-element {
+  margin-top: 12px;
+}
+
+.word-pos {
+  margin-right: 8px;
+}

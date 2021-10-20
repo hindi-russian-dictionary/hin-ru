@@ -14,16 +14,22 @@ export const useArticleGroup = (word: string) => {
       if (!word) {
         return;
       }
-      if (!articlesCache[word]) {
-        const fetchedArticle = await database.getArticle(firestore, word);
-        if (fetchedArticle) {
-          articlesCache[word] = fetchedArticle;
+      let cachedArticles = Object.values(articlesCache).filter(
+        (article) => article.word === word
+      );
+      if (!cachedArticles) {
+        const fetchedArticles = await database.getArticle(firestore, word);
+        if (fetchedArticles) {
+          fetchedArticles.forEach((fetchedArticle) => {
+            articlesCache[fetchedArticle.id] = fetchedArticle;
+          });
+          cachedArticles = fetchedArticles;
         }
       }
       if (!isMounted()) {
         return;
       }
-      setArticleGroup(articlesCache[word] || null);
+      setArticleGroup(cachedArticles || null);
     },
     [firestore, setArticleGroup, word]
   );
