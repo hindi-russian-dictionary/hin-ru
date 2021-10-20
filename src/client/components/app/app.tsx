@@ -48,7 +48,7 @@ export const App: React.FC = () => {
           <Route path="/add" element={<WordAddForm />} />
           <Route path="/article/:word/">
             <Route index element={<WordPage />} />
-            <Route path="edit" element={<WordAddForm />} />
+            <Route path="edit/:id" element={<WordAddForm />} />
           </Route>
           <Route path="/about" element={<AboutUsPage />} />
           <Route path="*" element={<MainPage />} />

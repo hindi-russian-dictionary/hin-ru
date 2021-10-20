@@ -4,8 +4,10 @@ import {useFirestore} from 'client/hooks/useFirestore';
 import {useAsyncEffect} from 'use-async-effect';
 import {articlesCache} from 'client/utils/articles-cache';
 
-export const useArticle = (word: string) => {
-  const [article, setArticle] = React.useState<Article | null>(null);
+export const useArticleGroup = (word: string) => {
+  const [articleGroup, setArticleGroup] = React.useState<Article[] | null>(
+    null
+  );
   const firestore = useFirestore();
   useAsyncEffect(
     async (isMounted) => {
@@ -21,9 +23,9 @@ export const useArticle = (word: string) => {
       if (!isMounted()) {
         return;
       }
-      setArticle(articlesCache[word] || null);
+      setArticleGroup(articlesCache[word] || null);
     },
-    [firestore, setArticle, word]
+    [firestore, setArticleGroup, word]
   );
-  return article;
+  return articleGroup;
 };

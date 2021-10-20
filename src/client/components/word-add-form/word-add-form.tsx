@@ -5,10 +5,9 @@ import {PARTS_OF_SPEECH, PartOfSpeech} from 'client/utils/parts-of-speech';
 import {DevanagariTextInput} from 'client/components/devangari-text-input/devangari-text-input';
 import {PropertiesForm} from 'client/components/properties-form/properties-form';
 import {MeaningsForm} from 'client/components/meanings-form/meanings-form';
-import {useOpenArticlePage} from 'client/hooks/useOpenArticlePage';
 import {useUserControls} from 'client/hooks/useUserControls';
-import {useArticle} from 'client/hooks/useArticle';
-import {useParams} from 'react-router-dom';
+import {useArticleGroup} from 'client/hooks/useArticleGroup';
+import {useNavigate, useParams} from 'react-router-dom';
 import {useUpdateArticle} from 'client/hooks/useUpdateArticle';
 import {useAddArticle} from 'client/hooks/useAddArticle';
 import {getNextValue} from 'client/utils/react-utils';
@@ -40,10 +39,17 @@ const getEmptyArticle = (): Article => ({
 });
 
 export const WordAddForm: React.FC = () => {
-  const openArticlePage = useOpenArticlePage();
+  const navigate = useNavigate();
+  const openArticlePage = React.useCallback(
+    (word: string) => navigate(`/article/${word}`),
+    [navigate]
+  );
 
-  const params = useParams<'word'>();
-  const article = useArticle(params.word || '');
+  const params = useParams<'word' | 'id'>();
+  const articleGroup = useArticleGroup(params.word || '');
+  const selectedArticle = articleGroup?.find(
+    (article) => article.id === params.id
+  );
   const addArticle = useAddArticle();
   const updateArticle = useUpdateArticle();
 
@@ -53,13 +59,13 @@ export const WordAddForm: React.FC = () => {
     React.useState<UploadStatus>('not_started');
 
   const [localArticle, setLocalArticle] = React.useState<Article>(
-    article || getEmptyArticle()
+    selectedArticle || getEmptyArticle()
   );
   React.useEffect(() => {
-    if (article) {
-      setLocalArticle(article);
+    if (selectedArticle) {
+      setLocalArticle(selectedArticle);
     }
-  }, [article, setLocalArticle]);
+  }, [selectedArticle, setLocalArticle]);
 
   const addWord = React.useCallback<React.FormEventHandler<HTMLFormElement>>(
     async (e) => {
@@ -146,8 +152,10 @@ export const WordAddForm: React.FC = () => {
   return (
     <div className="row my-4">
       <div className="col-12">
-        {`Автор ${article?.author ? `- ${article.author}` : 'неизвестен'}`}
-        <form onSubmit={article ? editWord : addWord}>
+        {`Автор ${
+          selectedArticle?.author ? `- ${selectedArticle.author}` : 'неизвестен'
+        }`}
+        <form onSubmit={selectedArticle ? editWord : addWord}>
           <div className="form-group">
             <label htmlFor="word">Слово</label>
             <DevanagariTextInput

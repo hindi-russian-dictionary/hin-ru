@@ -1,13 +1,12 @@
 import React from 'react';
+import {Link} from 'react-router-dom';
 
-import {useOpenArticlePage} from 'client/hooks/useOpenArticlePage';
 import {useLookupArticles} from 'client/hooks/useLookupArticles';
 
 export const MainPage: React.FC = () => {
-  const openArticlePage = useOpenArticlePage();
   const [term, setTerm] = React.useState('');
   const [fixedTerm, setFixedTerm] = React.useState('');
-  const articles = useLookupArticles(fixedTerm);
+  const articleGroups = useLookupArticles(fixedTerm);
   const onKeyDown = React.useCallback<React.KeyboardEventHandler>(
     (event) => {
       if (event.key === 'Enter') {
@@ -44,24 +43,30 @@ export const MainPage: React.FC = () => {
       </div>
       <div className="col-12">
         <div className="list-group">
-          {articles.map((article) => (
-            <button
-              key={article.id}
+          {articleGroups.map((articleGroup) => (
+            <Link
+              key={articleGroup.map((article) => article.id).join(',')}
               type="button"
               className="list-group-item list-group-item-action"
-              onClick={() => openArticlePage(article.word)}
+              to={`/article/${articleGroup[0].word}`}
             >
-              {article.word}
-              &nbsp; &nbsp; &nbsp;
-              <span
-                className={
-                  'badge ' +
-                  (article.approved ? 'bg-success' : 'text-white bg-secondary')
-                }
-              >
-                {article.approved ? 'одобрено' : 'черновик'}
-              </span>
-            </button>
+              {articleGroup[0].word}
+              {articleGroup.map((article) => (
+                <>
+                  &nbsp; &nbsp; &nbsp;
+                  <span
+                    className={
+                      'badge ' +
+                      (article.approved
+                        ? 'bg-success'
+                        : 'text-white bg-secondary')
+                    }
+                  >
+                    {article.approved ? 'одобрено' : 'черновик'}
+                  </span>
+                </>
+              ))}
+            </Link>
           ))}
         </div>
       </div>

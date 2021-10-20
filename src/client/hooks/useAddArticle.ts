@@ -8,7 +8,10 @@ export const useAddArticle = () => {
   return React.useCallback(
     async (article: Omit<Article, 'id'>) => {
       const id = await database.addArticle(firestore, article);
-      articlesCache[article.word] = {...article, id};
+      if (!articlesCache[article.word]) {
+        articlesCache[article.word] = [];
+      }
+      articlesCache[article.word].push({...article, id});
       return id;
     },
     [firestore]

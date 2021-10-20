@@ -81,7 +81,7 @@ export const database = {
   getArticle: async (
     firestore: Firestore,
     word: string
-  ): Promise<Article | undefined> => {
+  ): Promise<Article[] | undefined> => {
     const collectionReference = (await collection(
       firestore,
       'articles'
@@ -94,7 +94,7 @@ export const database = {
     return docsSnapshots.docs.map((doc) => ({
       ...doc.data(),
       id: doc.id,
-    }))[0];
+    }));
   },
 
   lookupArticles: async (

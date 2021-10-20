@@ -6,8 +6,8 @@ import {useFirestore} from 'client/hooks/useFirestore';
 import {useUserControls} from 'client/hooks/useUserControls';
 import {lookupArticleCache, articlesCache} from 'client/utils/articles-cache';
 
-export const useLookupArticles = (term: string): Article[] => {
-  const [articles, setArticles] = React.useState<Article[]>([]);
+export const useLookupArticles = (term: string): Article[][] => {
+  const [articles, setArticles] = React.useState<Article[][]>([]);
   const firestore = useFirestore();
   const {isUserAdmin} = useUserControls();
   useAsyncEffect(
@@ -22,7 +22,10 @@ export const useLookupArticles = (term: string): Article[] => {
           isUserAdmin
         );
         fetchedArticles.forEach((article) => {
-          articlesCache[article.word] = article;
+          if (!articlesCache[article.word]) {
+            articlesCache[article.word] = [];
+          }
+          articlesCache[article.word].push(article);
         });
         lookupArticleCache[term] = fetchedArticles.map(
           (article) => article.word
