@@ -1,15 +1,20 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "module": "esnext",
-    "baseUrl": "./src",
+    "module": "commonjs",
+    "baseUrl": ".",
     "lib": [
       "dom",
       "dom.iterable",
       "esnext"
     ]
   },
+  "ts-node": {
+    "files": true,
+    "require": ["tsconfig-paths/register"]
+  },
   "include": [
-    "./src/server/**/*"
+    "server",
+    "tools"
   ]
 }

@@ -1,6 +1,6 @@
 {
     "exec": "node -r ts-node/register/transpile-only",
-    "ext": "ts",
+    "ext": "ts,tsx",
     "env": {
         "TS_NODE_PRETTY": true,
         "TS_NODE_FILES": true
