@@ -23,7 +23,10 @@ const generateHtml = () => {
 };
 
 function run() {
+  console.log('Ready to generate HTML');
   generateHtml();
+  console.log('HTML generated');
+  process.exit(0);
 }
 
 run();

@@ -10,7 +10,7 @@ export const MainPage: React.FC = () => {
   const [term, setTerm] = React.useState(searchParams.get('query') || '');
   const [fixedTerm, setFixedTerm] = React.useState(term);
   useSyncSearchQuery(fixedTerm);
-  const articleGroups = useLookupArticles(fixedTerm);
+  const lookupArticlesQuery = useLookupArticles(fixedTerm);
   const onKeyDown = React.useCallback<React.KeyboardEventHandler>(
     (event) => {
       if (event.key === 'Enter') {
@@ -38,16 +38,27 @@ export const MainPage: React.FC = () => {
                 placeholder="Найти слово..."
                 aria-label="Слово"
                 aria-describedby="language-identifier"
+                value={term}
                 onChange={(event) => setTerm(event.currentTarget.value)}
                 onKeyDown={onKeyDown}
               />
             </span>
+            {lookupArticlesQuery.isLoading ? <div>...</div> : null}
           </div>
         </div>
       </div>
+      {lookupArticlesQuery.error ? (
+        <div>
+          <div>Ошибка</div>
+          <div>{String(lookupArticlesQuery.error)}</div>
+        </div>
+      ) : null}
       <div className="col-12">
         <div className="list-group">
-          {articleGroups.map((articleGroup) => (
+          {lookupArticlesQuery.data && lookupArticlesQuery.data.length === 0 ? (
+            <div>{`По запросу ${fixedTerm} ничего не найдено :(`}</div>
+          ) : null}
+          {(lookupArticlesQuery.data ?? []).map((articleGroup) => (
             <Link
               key={articleGroup.map((article) => article.id).join(',')}
               type="button"
@@ -57,7 +68,7 @@ export const MainPage: React.FC = () => {
               <div className="word">{articleGroup[0].word}</div>
               <div>
                 {articleGroup.map((article) => (
-                  <div className="word-element">
+                  <div key={article.id} className="word-element">
                     &nbsp; &nbsp; &nbsp;
                     {articleGroup.length > 1 ? (
                       <span className="word-pos">

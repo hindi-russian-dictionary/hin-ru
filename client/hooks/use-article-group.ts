@@ -1,45 +1,18 @@
 import React from 'react';
-import {useAsyncEffect} from 'use-async-effect';
+import {useQuery, UseQueryResult} from 'react-query';
 
-import {Article, database} from 'client/lib/db';
+import {database} from 'client/lib/db';
 import {useFirestore} from 'client/hooks/use-firestore';
-import {articlesCache} from 'client/utils/articles-cache';
+import {getArticleGroupKey, GroupResult} from 'client/utils/query-utils';
 
-export const useArticleGroup = (
-  word: string
-): [Article[] | null, () => void] => {
-  const [articleGroup, setArticleGroup] = React.useState<Article[] | null>(
-    null
-  );
-  const [count, setCount] = React.useState(0);
+export const useArticleGroup = (word: string): UseQueryResult<GroupResult> => {
   const firestore = useFirestore();
-  useAsyncEffect(
-    async (isMounted) => {
-      if (!word) {
-        return;
-      }
-      let cachedArticles = Object.values(articlesCache).filter(
-        (article) => article.word === word
-      );
-      if (cachedArticles.length === 0) {
-        const fetchedArticles = await database.getArticle(firestore, word);
-        if (fetchedArticles) {
-          fetchedArticles.forEach((fetchedArticle) => {
-            articlesCache[fetchedArticle.id] = fetchedArticle;
-          });
-          cachedArticles = fetchedArticles;
-        }
-      }
-      if (!isMounted()) {
-        return;
-      }
-      setArticleGroup(cachedArticles || null);
-    },
-    [firestore, setArticleGroup, word, count]
+  const wordKey = getArticleGroupKey(word);
+  const fetchArticle = React.useCallback(
+    () => database.getArticle(firestore, word),
+    [word, firestore]
   );
-  const forceUpdate = React.useCallback(
-    () => setCount((x) => x + 1),
-    [setCount]
-  );
-  return [articleGroup, forceUpdate];
+  return useQuery(wordKey, fetchArticle, {
+    enabled: word.length !== 0,
+  });
 };

@@ -3,6 +3,7 @@ import {
   addDoc,
   collection,
   CollectionReference,
+  deleteDoc,
   doc,
   endAt,
   Firestore,
@@ -31,7 +32,7 @@ export type Article = {
     examples: string;
   }[];
   properties: Record<string, Record<string, boolean>>;
-  taken_from: string;
+  taken_from?: string;
   control: {
     rus: string;
     hin: string;
@@ -54,10 +55,13 @@ type User = {
   moderator: boolean;
 };
 
+export type PartialArticle = Partial<Omit<Article, 'id'>> & { id: string };
+export type NewArticle = Omit<Article, 'id'>;
+
 export const database = {
   addArticle: async (
     firestore: Firestore,
-    article: Omit<Article, 'id'>
+    article: NewArticle
   ): Promise<string> => {
     const collectionReference = (await collection(
       firestore,
@@ -69,7 +73,7 @@ export const database = {
 
   updateArticle: async (
     firestore: Firestore,
-    {id, ...article}: Partial<Article>
+    {id, ...article}: PartialArticle
   ): Promise<void> => {
     const collectionReference = (await collection(
       firestore,
@@ -77,6 +81,18 @@ export const database = {
     )) as CollectionReference<Article>;
     const docReference = await doc(collectionReference, id);
     await updateDoc(docReference, article as UpdateData<Article>);
+  },
+
+  removeArticle: async (
+    firestore: Firestore,
+    idToRemove: string
+  ): Promise<void> => {
+    const collectionReference = (await collection(
+      firestore,
+      'articles'
+    )) as CollectionReference<Article>;
+    const docReference = await doc(collectionReference, idToRemove);
+    await deleteDoc(docReference);
   },
 
   getArticle: async (

@@ -1,41 +1,33 @@
-import React from 'react';
-import {useAsyncEffect} from 'use-async-effect';
-
 import {Article, database} from 'client/lib/db';
 import {useFirestore} from 'client/hooks/use-firestore';
 import {useUserControls} from 'client/hooks/use-user-controls';
-import {lookupArticleCache, articlesCache} from 'client/utils/articles-cache';
+import {getLookupArticleGroupKey} from 'client/utils/query-utils';
+import {useQuery, UseQueryResult} from 'react-query';
 
-export const useLookupArticles = (term: string): Article[][] => {
-  const [articles, setArticles] = React.useState<Article[][]>([]);
+export const useLookupArticles = (
+  term: string
+): UseQueryResult<Article[][]> => {
   const firestore = useFirestore();
   const {isUserAdmin} = useUserControls();
-  useAsyncEffect(
-    async (isMounted) => {
+
+  const termKey = getLookupArticleGroupKey(term, isUserAdmin);
+  return useQuery<Article[][]>(
+    termKey,
+    async () => {
       if (!term) {
-        return;
+        return [];
       }
-      if (!lookupArticleCache[term]) {
-        const fetchedArticles = await database.lookupArticles(
-          firestore,
-          term,
-          isUserAdmin
-        );
-        fetchedArticles.forEach((article) => {
-          articlesCache[article.id] = article;
-        });
-        lookupArticleCache[term] = fetchedArticles.map((article) => article.id);
-      }
-      if (!isMounted()) {
-        return;
-      }
-      setArticles(
-        groupByWord(lookupArticleCache[term].map((id) => articlesCache[id]))
+      const fetchedArticles = await database.lookupArticles(
+        firestore,
+        term,
+        isUserAdmin
       );
+      return groupByWord(fetchedArticles);
     },
-    [firestore, setArticles, isUserAdmin, term]
+    {
+      enabled: term.length !== 0,
+    }
   );
-  return articles;
 };
 
 function groupByWord(articles: Article[]): Article[][] {

@@ -8,11 +8,9 @@ import {PropertiesForm} from 'client/components/properties-form/properties-form'
 import {MeaningsForm} from 'client/components/meanings-form/meanings-form';
 import {useUserControls} from 'client/hooks/use-user-controls';
 import {useArticleGroup} from 'client/hooks/use-article-group';
-import {useUpdateArticle} from 'client/hooks/use-update-article';
 import {useAddArticle} from 'client/hooks/use-add-article';
 import {getNextValue} from 'client/utils/react-utils';
-
-type UploadStatus = 'not_started' | 'pending' | 'success' | 'error';
+import {useMutateArticle} from 'client/hooks/use-mutate-article';
 
 const getEmptyArticle = (): Article => ({
   id: 'temporary',
@@ -46,17 +44,15 @@ export const WordAddForm: React.FC = () => {
   );
 
   const params = useParams<'word' | 'id'>();
-  const [articleGroup] = useArticleGroup(params.word || '');
-  const selectedArticle = articleGroup?.find(
+  const word = params.word || '';
+  const articleGroupQuery = useArticleGroup(word);
+  const articleMutation = useMutateArticle(word);
+  const selectedArticle = articleGroupQuery.data?.find(
     (article) => article.id === params.id
   );
-  const addArticle = useAddArticle();
-  const updateArticle = useUpdateArticle();
+  const addArticleMutation = useAddArticle();
 
   const {user} = useUserControls();
-
-  const [uploadStatus, setUploadStatus] =
-    React.useState<UploadStatus>('not_started');
 
   const [localArticle, setLocalArticle] = React.useState<Article>(
     selectedArticle || getEmptyArticle()
@@ -66,47 +62,6 @@ export const WordAddForm: React.FC = () => {
       setLocalArticle(selectedArticle);
     }
   }, [selectedArticle, setLocalArticle]);
-
-  const addWord = React.useCallback<React.FormEventHandler<HTMLFormElement>>(
-    async (e) => {
-      e.preventDefault();
-      setUploadStatus('pending');
-      try {
-        const id = await addArticle({
-          ...localArticle,
-          author: user?.email || undefined,
-        });
-        setLocalArticle((prev) => ({...prev, id}));
-        setUploadStatus('success');
-        openArticlePage(localArticle.word);
-      } catch (e) {
-        setUploadStatus('error');
-      }
-    },
-    [
-      setUploadStatus,
-      addArticle,
-      localArticle,
-      setLocalArticle,
-      openArticlePage,
-      user,
-    ]
-  );
-
-  const editWord = React.useCallback<React.FormEventHandler<HTMLFormElement>>(
-    async (e) => {
-      e.preventDefault();
-      setUploadStatus('pending');
-      try {
-        await updateArticle(localArticle);
-        setUploadStatus('success');
-        openArticlePage(localArticle.word);
-      } catch (e) {
-        setUploadStatus('error');
-      }
-    },
-    [setUploadStatus, updateArticle, localArticle, openArticlePage]
-  );
 
   const updateLocalArticle = React.useCallback(
     function <K extends keyof Article>(
@@ -149,19 +104,61 @@ export const WordAddForm: React.FC = () => {
     [updateLocalArticle]
   );
 
+  const trimWord = React.useCallback(() => {
+    setWord((word) => word.trim());
+  }, [setWord]);
+
+  const isLoading = articleMutation.isLoading || addArticleMutation.isLoading;
+  const error = articleMutation.error || addArticleMutation.error;
+  const submit = React.useCallback<React.FormEventHandler<HTMLFormElement>>(
+    (event) => {
+      event.preventDefault();
+      if (isLoading) {
+        return;
+      }
+      const trimmedWord = localArticle.word.trim();
+      if (selectedArticle) {
+        articleMutation.mutate({
+          ...localArticle,
+          word: trimmedWord,
+        });
+      } else {
+        if (localArticle.word.length === 0) {
+          return;
+        }
+        addArticleMutation.mutate({
+          ...localArticle,
+          word: trimmedWord,
+          author: user?.email || undefined,
+        });
+      }
+      openArticlePage(trimmedWord);
+    },
+    [
+      selectedArticle,
+      articleMutation,
+      addArticleMutation,
+      localArticle,
+      openArticlePage,
+      user,
+      isLoading,
+    ]
+  );
+
   return (
     <div className="row my-4">
       <div className="col-12">
         {`Автор ${
           selectedArticle?.author ? `- ${selectedArticle.author}` : 'неизвестен'
         }`}
-        <form onSubmit={selectedArticle ? editWord : addWord}>
+        <form onSubmit={submit}>
           <div className="form-group">
             <label htmlFor="word">Слово</label>
             <DevanagariTextInput
               placeholder="हिंदी"
               value={localArticle.word}
               setValue={setWord}
+              onBlur={trimWord}
             />
           </div>
           <div className="form-group">
@@ -338,15 +335,19 @@ export const WordAddForm: React.FC = () => {
           <div className="col-12 my-3 text-center">
             <button
               className={
-                'btn btn-outline-primary' +
-                (uploadStatus !== 'not_started' ? ' disabled' : '')
+                'btn btn-outline-primary' + (isLoading ? ' disabled' : '')
               }
+              disabled={isLoading}
               type="submit"
             >
-              {uploadStatus === 'error'
-                ? 'Что-то пошло не так. Нажмите F12, сделайте скриншот и покажите его Диме.'
-                : 'Отправить'}
+              {isLoading ? 'Загружается..' : 'Отправить'}
             </button>
+            {error ? (
+              <div>
+                <div>Случилась ошибка!</div>
+                <div>{String(error)}</div>
+              </div>
+            ) : null}
           </div>
         </form>
       </div>

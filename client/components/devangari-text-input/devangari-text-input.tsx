@@ -2,16 +2,22 @@ import React from 'react';
 
 import {DevangariKeyboard} from 'client/components/devangari-keyboard/devangari-keyboard';
 
-type Props = {
-  placeholder: string;
-  value: string;
+type InputProps = React.DetailedHTMLProps<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  HTMLInputElement
+>;
+
+type Props = Omit<InputProps, 'onChange'> & {
   setValue: React.Dispatch<React.SetStateAction<string>>;
 };
 
-export const DevanagariTextInput: React.FC<Props> = (props) => {
+export const DevanagariTextInput: React.FC<Props> = ({
+  setValue,
+  ...props
+}) => {
   const addSymbol = React.useCallback(
-    (symbol) => props.setValue((prev) => prev + symbol),
-    [props.setValue]
+    (symbol) => setValue((prev) => prev + symbol),
+    [setValue]
   );
   return (
     <>
@@ -19,9 +25,8 @@ export const DevanagariTextInput: React.FC<Props> = (props) => {
         <input
           type="text"
           className="form-control"
-          placeholder={props.placeholder}
-          value={props.value}
-          onChange={(e) => props.setValue(e.currentTarget.value)}
+          onChange={(e) => setValue(e.currentTarget.value)}
+          {...props}
         />
         <div className="input-group-append">
           <button

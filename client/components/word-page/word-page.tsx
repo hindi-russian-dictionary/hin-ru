@@ -7,41 +7,77 @@ import {
 } from 'client/utils/parts-of-speech';
 import {useUserControls} from 'client/hooks/use-user-controls';
 import {useArticleGroup} from 'client/hooks/use-article-group';
-import {useUpdateArticle} from 'client/hooks/use-update-article';
 import {Article} from 'client/lib/db';
+import {useMutateArticle} from 'client/hooks/use-mutate-article';
+import {useDeleteArticle} from 'client/hooks/use-delete-article';
 
 export const WordPage: React.FC = () => {
   const params = useParams<'word'>();
-  const [articleGroup, forceUpdateArticleGroup] = useArticleGroup(
-    params.word || ''
-  );
+  const word = params.word || '';
+  const articleGroupQuery = useArticleGroup(word);
+  const articleMutation = useMutateArticle(word);
+  const articleDeletion = useDeleteArticle(word);
 
   const navigate = useNavigate();
   const editArticle = React.useCallback(
     (article: Article) => {
       navigate(`/article/${params.word}/edit/${article.id}/`);
     },
-    [navigate, params.word, articleGroup]
+    [navigate, params.word]
   );
-
-  const updateArticle = useUpdateArticle();
 
   const {isUserAdmin} = useUserControls();
 
   const switchApproval = React.useCallback<(index: number) => void>(
     async (index) => {
-      const article = articleGroup?.[index];
+      if (!articleGroupQuery.data) {
+        return;
+      }
+      const article = articleGroupQuery.data[index];
       if (!article) {
         return;
       }
-      await updateArticle({...article, approved: !article.approved});
-      forceUpdateArticleGroup();
+      void articleMutation.mutate({...article, approved: !article.approved});
     },
-    [updateArticle, articleGroup]
+    [articleMutation, articleGroupQuery]
   );
 
+  const deleteWord = React.useCallback(
+    (index) => {
+      if (!articleGroupQuery.data) {
+        return;
+      }
+      const article = articleGroupQuery.data[index];
+      if (!article) {
+        return;
+      }
+      const sure = window.confirm(
+        `Вы уверены что хотите удалить слово ${article.word}?`
+      );
+      if (!sure) {
+        return;
+      }
+      articleDeletion.mutate(article.id);
+    },
+    [articleGroupQuery, articleDeletion]
+  );
+
+  if (articleGroupQuery.isLoading) {
+    return <div>loading...</div>;
+  }
+
+  if (articleGroupQuery.error) {
+    return (
+      <div>
+        <div>Ошибка</div>
+        <div>{String(articleGroupQuery.error)}</div>
+      </div>
+    );
+  }
+
+  const articleGroup = articleGroupQuery.data;
   if (!articleGroup || articleGroup.length === 0) {
-    return <div>404</div>;
+    return <div>Таких слов не найдено</div>;
   }
 
   return (
@@ -52,23 +88,31 @@ export const WordPage: React.FC = () => {
       {articleGroup.map((article, index) => (
         <div className="article" key={article.id}>
           {isUserAdmin ? (
-            <button
-              className="btn btn-info"
-              onClick={() => editArticle(article)}
-            >
-              Редактировать (осторожно, вы админ)
-            </button>
-          ) : null}
-          &nbsp;
-          {isUserAdmin ? (
-            <button
-              className={`btn ${
-                article.approved ? 'btn-danger' : 'btn-success'
-              }`}
-              onClick={() => switchApproval(index)}
-            >
-              {article.approved ? 'Разодобрить :(' : 'Одобрить!'}
-            </button>
+            <>
+              <button
+                className="btn btn-info"
+                onClick={() => editArticle(article)}
+              >
+                Редактировать
+              </button>
+              &nbsp;
+              <button
+                className={`btn ${
+                  article.approved ? 'btn-danger' : 'btn-success'
+                }`}
+                onClick={() => switchApproval(index)}
+              >
+                {article.approved ? 'Разодобрить' : 'Одобрить'}
+              </button>
+              &nbsp;
+              <button
+                className={'btn btn-danger'}
+                onClick={() => deleteWord(index)}
+                disabled={articleDeletion.isLoading}
+              >
+                {articleDeletion.isLoading ? 'Удаляем...' : 'Удалить'}
+              </button>
+            </>
           ) : null}
           <h1>{article.word}</h1>
           <table className="table">
@@ -136,7 +180,7 @@ export const WordPage: React.FC = () => {
               </tr>
               <tr>
                 <th>Заимствовано из</th>
-                <td>{article.taken_from}</td>
+                <td>{article.taken_from || 'неизвестно'}</td>
               </tr>
             </tbody>
           </table>
