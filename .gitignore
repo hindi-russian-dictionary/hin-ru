@@ -4,9 +4,11 @@
 
 .DS_Store
 .env.*
+!.env.*.example
 .idea
+.auth-key.deploy.json
 
 npm-debug.log*
 
 *.cache
-tools/firebase-utils
+/tools/firebase-utils

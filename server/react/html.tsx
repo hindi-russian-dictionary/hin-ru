@@ -1,7 +1,7 @@
 import React from 'react';
 import * as ReactDOM from 'react-dom/server';
 import {Entry} from 'client/entries/server';
-import {Mode} from 'tools/mode';
+import {Mode} from 'server/lib/mode';
 
 const ReactScripts: React.FC<Pick<HTMLProps, 'mode'>> = ({mode}) => {
   if (mode === 'development') {
