@@ -8,7 +8,7 @@ import {getWebpackConfig} from 'tools/webpack/get-webpack-config';
 import {paths} from 'server/lib/paths';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
-const config = getWebpackConfig((mode) => {
+const config = getWebpackConfig('client', (mode) => {
   const isProduction = mode === 'production';
   return {
     target: 'web',
@@ -18,7 +18,6 @@ const config = getWebpackConfig((mode) => {
     ].filter((x): x is string => Boolean(x)),
     output: {
       path: path.join(paths.build, 'client'),
-      // publicPath: isProduction ? undefined : '/static/',
       filename: isProduction ? '[name].[contenthash:8].js' : '[name].js',
       chunkFilename: isProduction
         ? '[name].[contenthash:8].chunk.js'

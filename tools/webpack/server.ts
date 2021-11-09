@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as webpack from 'webpack';
 import nodeExternals from 'webpack-node-externals';
 import glob from 'glob-promise';
+import * as ts from 'typescript';
 
 import {getWebpackConfig} from 'tools/webpack/get-webpack-config';
 import {paths} from 'server/lib/paths';
@@ -37,7 +38,7 @@ class IgnoreAliasPlugin implements ResolvePluginInstance {
   }
 }
 
-const config = getWebpackConfig({
+const config = getWebpackConfig('server', {
   target: 'node',
   entry: async () => {
     const rootPath = path.join(paths.server, 'serverless/functions');
@@ -63,6 +64,9 @@ const config = getWebpackConfig({
   externals: [nodeExternals()],
   externalsPresets: {
     node: true,
+  },
+  compilerOptions: {
+    target: ts.ScriptTarget.ESNext,
   },
   resolve: {
     plugins: [

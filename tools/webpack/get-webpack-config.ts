@@ -1,6 +1,7 @@
 import * as webpack from 'webpack';
 import * as ts from 'typescript';
 import {WebpackManifestPlugin} from 'webpack-manifest-plugin';
+import {StatsWriterPlugin} from 'webpack-stats-plugin';
 
 import {mode, Mode} from 'server/lib/mode';
 
@@ -10,19 +11,21 @@ type Config = {
     | ts.TransformerFactory<ts.SourceFile>
     | undefined
   )[];
+  compilerOptions?: ts.CompilerOptions;
 } & Omit<Partial<webpack.Configuration>, 'target' | 'mode'>;
 type ConfigOrConfigFn = Config | ((mode: Mode) => Config);
 
 export const getWebpackConfig = (
+  entryName: string,
   configOrConfigFn: ConfigOrConfigFn
 ): webpack.Configuration => {
-  const {customBeforeTransformers, ...config} =
+  const {customBeforeTransformers, compilerOptions, ...config} =
     typeof configOrConfigFn === 'function'
       ? configOrConfigFn(mode)
       : configOrConfigFn;
   const isProduction = mode === 'production';
   return {
-    devtool: isProduction ? undefined : 'cheap-module-source-map',
+    devtool: 'source-map',
     ...config,
     mode,
     module: {
@@ -39,6 +42,7 @@ export const getWebpackConfig = (
                 }),
                 transpileOnly: !isProduction,
                 onlyCompileBundledFiles: true,
+                compilerOptions,
               },
             },
           ],
@@ -61,6 +65,10 @@ export const getWebpackConfig = (
         useEntryKeys: true,
       }),
       ...(config.plugins || []),
+      new StatsWriterPlugin({
+        filename: 'stats.json',
+        stats: 'all',
+      }) as unknown as webpack.WebpackPluginInstance,
     ],
     cache: {
       type: 'filesystem',

@@ -1,3 +1,5 @@
+import util from 'util';
+import fs from 'fs';
 import Zip from 'adm-zip';
 import mime from 'mime-types';
 import crypto from 'crypto';
@@ -196,4 +198,15 @@ export const clone = (obj: object): object => {
 
 export const getFunctionName = (fn: ServerlessFunctionDescription): string => {
   return fn.path.replace(/\//g, '--');
+};
+
+const promisifiedRm = util.promisify(fs.rm);
+export const tryCleanDir = async (pathname: string): Promise<void> => {
+  try {
+    await promisifiedRm(pathname, {recursive: true});
+  } catch (e) {
+    if ((e as any).code !== 'ENOENT') {
+      throw e;
+    }
+  }
 };

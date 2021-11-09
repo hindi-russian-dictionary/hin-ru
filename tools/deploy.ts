@@ -36,6 +36,7 @@ import {
   getGatewayConfig,
   getTagFromContent,
   getZip,
+  tryCleanDir,
   validateVariable,
 } from 'tools/deploy/utils';
 import clientEntry from 'tools/webpack/client';
@@ -101,6 +102,7 @@ function updateFunction(params: UpdateFunctionParams): Listr<DeployContext> {
   const client = params.session.createClient(FunctionServiceClient);
   const operationClient = new OperationService(params.session);
   const fnName = getFunctionName(params.fn);
+  const fnDescription = `Function "${params.fn.path}"`;
   return new Listr([
     {
       title: 'Verifying function',
@@ -127,6 +129,7 @@ function updateFunction(params: UpdateFunctionParams): Listr<DeployContext> {
           await client.create({
             folderId: params.folderId,
             name: fnName,
+            description: fnDescription,
           }),
           CreateFunctionMetadata
         );
@@ -182,7 +185,6 @@ function updateFunction(params: UpdateFunctionParams): Listr<DeployContext> {
         const nextVersionData = {
           functionId: ctx.functions[params.index].id,
           runtime: 'nodejs16',
-          description: `Function "${params.fn.path}"`,
           entrypoint: 'index.handler',
           resources: resources as any,
           executionTimeout: executionTimeout as any,
@@ -273,7 +275,7 @@ function updateFunctions(params: UpdateFunctionsParams): Listr<DeployContext> {
       },
     },
     {
-      title: 'Remove functions',
+      title: 'Remove unused functions',
       task: async (ctx) => {
         return new Listr<DeployContext>(
           ctx.leftoverFunctions.map((fn) => ({
@@ -655,6 +657,13 @@ async function getClientWebpack(): Promise<ClientWebpackResult> {
   if (!jsonStats) {
     throw new Error('No stats provided by webpack');
   }
+  if (jsonStats.errors && jsonStats.errors.length !== 0) {
+    throw new Error(
+      `Client webpack build errors:\n${jsonStats.errors
+        .map((error) => error.message)
+        .join('\n')}`
+    );
+  }
   const outputPath = jsonStats.outputPath;
   if (!outputPath) {
     throw new Error('No output path provided by webpack');
@@ -681,6 +690,13 @@ async function getServerWebpack(): Promise<ServerWebpackResult> {
   const jsonStats = stats?.toJson();
   if (!jsonStats) {
     throw new Error('No stats provided by webpack');
+  }
+  if (jsonStats.errors && jsonStats.errors.length !== 0) {
+    throw new Error(
+      `Server webpack build errors:\n${jsonStats.errors
+        .map((error) => error.message)
+        .join('\n')}`
+    );
   }
   const outputs = Object.entries(jsonStats.assetsByChunkName || {}).map(
     ([key, value]) => {
@@ -768,12 +784,14 @@ async function run() {
               {
                 title: 'Client webpack',
                 task: async (ctx) => {
+                  await tryCleanDir(path.join(paths.build, 'client'));
                   ctx.clientWebpack = await getClientWebpack();
                 },
               },
               {
                 title: 'Server webpack',
                 task: async (ctx) => {
+                  await tryCleanDir(path.join(paths.build, 'server'));
                   ctx.serverWebpack = await getServerWebpack();
                 },
               },

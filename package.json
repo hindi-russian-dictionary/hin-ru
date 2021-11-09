@@ -56,6 +56,7 @@
     "@types/webpack-dev-middleware": "^5.0.2",
     "@types/webpack-hot-middleware": "^2.25.5",
     "@types/webpack-node-externals": "^2.5.3",
+    "@types/webpack-stats-plugin": "^0.3.2",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
     "adm-zip": "^0.5.9",
@@ -99,6 +100,7 @@
     "webpack-hot-middleware": "^2.25.1",
     "webpack-manifest-plugin": "^4.0.2",
     "webpack-node-externals": "^3.0.0",
+    "webpack-stats-plugin": "^1.0.3",
     "yandex-cloud-lite": "^1.4.1"
   },
   "engines": {
