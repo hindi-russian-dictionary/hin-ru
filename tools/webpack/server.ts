@@ -41,7 +41,7 @@ class IgnoreAliasPlugin implements ResolvePluginInstance {
 const config = getWebpackConfig('server', {
   target: 'node',
   entry: async () => {
-    const rootPath = path.join(paths.server, 'serverless/functions');
+    const rootPath = path.join(paths.server, 'serverless');
     const files = await glob(path.join(rootPath, '**/*.ts'));
     return files.reduce((acc, file) => {
       const extname = path.extname(file);

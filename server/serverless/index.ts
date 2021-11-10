@@ -3,7 +3,7 @@ import crossFetch from 'cross-fetch';
 
 import {renderApp} from 'server/react/html';
 import {mode} from 'server/lib/mode';
-import {ServerlessEvent, ServerlessHandler} from 'server/serverless/types';
+import {ServerlessEvent, ServerlessHandler} from 'server/types/serverless';
 
 export type OperationContext = {
   objectStorage: {
@@ -28,7 +28,7 @@ const getScripts = (manifest: Manifest): string[] => {
   return [manifest['main']].map((entry) => `/static/${entry}`);
 };
 
-const handler: ServerlessHandler = async (event) => {
+export const handler: ServerlessHandler = async (event) => {
   const manifest = await getManifest(event);
   const scripts = getScripts(manifest);
   const app = renderApp({
@@ -44,5 +44,3 @@ const handler: ServerlessHandler = async (event) => {
     body: app,
   };
 };
-
-export {handler};

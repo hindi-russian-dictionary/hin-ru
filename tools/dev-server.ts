@@ -20,7 +20,7 @@ const devMiddleware = webpackDevMiddleware(compiler, {
 app.use(devMiddleware);
 app.use(webpackHotMiddleware(compiler as any));
 
-const entryPointPath = path.join(paths.server, 'serverless/app.ts');
+const entryPointPath = path.join(paths.server, 'app.ts');
 
 app.use(express.static(paths.publicDir));
 

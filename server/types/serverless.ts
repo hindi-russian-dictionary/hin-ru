@@ -27,6 +27,7 @@ export type ServerlessEvent = {
   url: string;
   params: Record<string, string>;
   multiValueParams: Record<string, string[]>;
+  path?: string;
   pathParams: unknown;
   headers: Record<string, string>;
   multiValueHeaders: Record<string, string[]>;

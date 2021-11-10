@@ -9,7 +9,7 @@ import {
   ServerlessFunctionDescription,
   ServerlessFunctionDescriptionWithId,
 } from 'tools/deploy/types';
-import {OperationContext} from 'server/serverless/functions';
+import {OperationContext} from 'server/serverless';
 
 type GetGatewayConfigParams = {
   functions: {

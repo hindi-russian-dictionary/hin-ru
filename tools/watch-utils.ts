@@ -63,7 +63,7 @@ export const setWebpackWatcher = (
 ): void => {
   compiler.hooks.done.tap('BuildStatsPlugin', () => {
     // TODO: сейчас самый последний очищаемый модуль - client/entries/server.tsx
-    // Однако, чтобы SSR тоже обновился - надо очистить всё вплоть до server/serverless/app.ts
+    // Однако, чтобы SSR тоже обновился - надо очистить всё вплоть до server/app.ts
     console.log('Clearing /client/ module cache from server');
     Object.keys(require.cache).forEach((id) => {
       if (cleanupRegex.test(id)) {
