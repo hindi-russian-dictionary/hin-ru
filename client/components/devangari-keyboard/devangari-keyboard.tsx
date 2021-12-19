@@ -13,7 +13,11 @@ export const DevangariKeyboard: React.FC<Props> = (props) => {
         {DEVANGARI_SYMBOLS.map((chunk, chunkIndex) => (
           <tr key={chunkIndex}>
             {chunk.map((symbol, index) => (
-              <td key={index} onClick={() => props.onClick(symbol)}>
+              <td
+                key={index}
+                onClick={(e) => props.onClick(symbol)}
+                style={{cursor: 'pointer'}}
+              >
                 {symbol}
               </td>
             ))}

@@ -3,7 +3,6 @@ import express, {RequestHandler} from 'express';
 
 import {handler as indexHandler} from 'server/serverless';
 import {handler as pingHandler} from 'server/serverless/ping';
-import {handler as echoHandler} from 'server/serverless/echo';
 import {HttpMethod, ServerlessHandler} from 'server/types/serverless';
 
 const app = express();
@@ -126,7 +125,6 @@ const convertHandlerToMiddleware = (
   };
 };
 
-app.use('/echo/', convertHandlerToMiddleware(echoHandler));
 app.use('/ping/', convertHandlerToMiddleware(pingHandler));
 app.all('*', convertHandlerToMiddleware(indexHandler));
 

@@ -180,3 +180,19 @@ button.btn.nav-link:hover:before {
 .word-pos {
   margin-right: 8px;
 }
+
+.tooltip-container {
+  background: white;
+  border: 1px solid black;
+  border-radius: 12px;
+  padding: 12px;
+  z-index: 900;
+}
+
+.table {
+  margin: 0;
+}
+
+.table td {
+  padding: 0.5rem;
+}

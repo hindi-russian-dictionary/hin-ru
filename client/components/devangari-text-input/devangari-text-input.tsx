@@ -1,6 +1,7 @@
 import React from 'react';
 
 import {DevangariKeyboard} from 'client/components/devangari-keyboard/devangari-keyboard';
+import {usePopperTooltip} from 'react-popper-tooltip';
 
 type InputProps = React.DetailedHTMLProps<
   React.InputHTMLAttributes<HTMLInputElement>,
@@ -11,17 +12,25 @@ type Props = Omit<InputProps, 'onChange'> & {
   setValue: React.Dispatch<React.SetStateAction<string>>;
 };
 
-export const DevanagariTextInput: React.FC<Props> = ({
-  setValue,
-  ...props
-}) => {
+export const DevanagariTextInput: React.FC<Props> = ({setValue, ...props}) => {
   const addSymbol = React.useCallback(
     (symbol) => setValue((prev) => prev + symbol),
     [setValue]
   );
+  const [isTooltipOpen, setTooltipOpen] = React.useState(false);
+  const switchTooltipOpen = React.useCallback(
+    () => setTooltipOpen((x) => !x),
+    [setTooltipOpen]
+  );
+  const {getTooltipProps, setTooltipRef, setTriggerRef, visible} =
+    usePopperTooltip({
+      trigger: null,
+      visible: isTooltipOpen,
+      onVisibleChange: setTooltipOpen,
+    });
   return (
     <>
-      <div className="input-group mb-3">
+      <div className="input-group mb-3" ref={setTriggerRef}>
         <input
           type="text"
           className="form-control"
@@ -32,10 +41,7 @@ export const DevanagariTextInput: React.FC<Props> = ({
           <button
             className="btn btn-outline-secondary"
             type="button"
-            data-toggle="collapse"
-            data-target="#devanagari-keyboard"
-            aria-expanded="false"
-            aria-controls="devanagari-keyboard"
+            onClick={switchTooltipOpen}
           >
             <span role="img" aria-label="keyboard">
               ⌨️
@@ -43,9 +49,17 @@ export const DevanagariTextInput: React.FC<Props> = ({
           </button>
         </div>
       </div>
-      <div className="collapse" id="devanagari-keyboard">
-        <DevangariKeyboard onClick={addSymbol} />
-      </div>
+      {
+        <div
+          ref={setTooltipRef}
+          {...getTooltipProps({
+            className: 'tooltip-container',
+            style: {display: visible ? 'block' : 'none'},
+          })}
+        >
+          <DevangariKeyboard onClick={addSymbol} />
+        </div>
+      }
     </>
   );
 };
