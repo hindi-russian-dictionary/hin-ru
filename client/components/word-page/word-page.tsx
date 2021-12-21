@@ -5,16 +5,16 @@ import {
   PARTS_OF_SPEECH,
   PARTS_OF_SPEECH_PROPERTIES,
 } from 'client/utils/parts-of-speech';
-import {useUserControls} from 'client/hooks/use-user-controls';
-import {useArticleGroup} from 'client/hooks/use-article-group';
-import {Article} from 'client/lib/db';
-import {useMutateArticle} from 'client/hooks/use-mutate-article';
-import {useDeleteArticle} from 'client/hooks/use-delete-article';
+import {useGetArticles} from 'client/hooks/articles/use-get-articles';
+import {Article} from 'client/types/db';
+import {useMutateArticle} from 'client/hooks/articles/use-mutate-article';
+import {useDeleteArticle} from 'client/hooks/articles/use-delete-article';
+import {useIsUserAdmin} from 'client/hooks/auth/use-is-user-admin';
 
 export const WordPage: React.FC = () => {
   const params = useParams<'word'>();
   const word = params.word || '';
-  const articleGroupQuery = useArticleGroup(word);
+  const articleGroupQuery = useGetArticles(word);
   const articleMutation = useMutateArticle(word);
   const articleDeletion = useDeleteArticle(word);
 
@@ -26,7 +26,7 @@ export const WordPage: React.FC = () => {
     [navigate, params.word]
   );
 
-  const {isUserAdmin} = useUserControls();
+  const isUserAdmin = useIsUserAdmin();
 
   const switchApproval = React.useCallback<(index: number) => void>(
     async (index) => {
@@ -62,8 +62,12 @@ export const WordPage: React.FC = () => {
     [articleGroupQuery, articleDeletion]
   );
 
+  if (articleGroupQuery.isIdle) {
+    return <div>Пожалуйста, подождите...</div>;
+  }
+
   if (articleGroupQuery.isLoading) {
-    return <div>loading...</div>;
+    return <div>Слова загружаются...</div>;
   }
 
   if (articleGroupQuery.error) {

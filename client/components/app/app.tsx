@@ -6,12 +6,14 @@ import {WordAddForm} from 'client/components/word-add-form/word-add-form';
 import {WordPage} from 'client/components/word-page/word-page';
 import {AboutUsPage} from 'client/components/about-us-page/about-us-page';
 
-import {useUserControls} from 'client/hooks/use-user-controls';
+import {useUserControls} from 'client/hooks/auth/use-user-controls';
+import {useUser} from 'client/hooks/auth/use-user';
 
 import './app.css';
 
 export const App: React.FC = () => {
-  const {user, signIn, signOut} = useUserControls();
+  const {userName} = useUser();
+  const {signIn, signOut} = useUserControls();
 
   return (
     <>
@@ -33,9 +35,9 @@ export const App: React.FC = () => {
             </Link>
           </li>
         </ul>
-        {user ? (
+        {userName ? (
           <button className="btn btn-primary" onClick={signOut}>
-            Выйти ({user.displayName})
+            Выйти ({userName})
           </button>
         ) : (
           <button className="btn btn-primary" onClick={signIn}>

@@ -25,7 +25,7 @@ class IgnoreAliasPlugin implements ResolvePluginInstance {
   apply(resolver: Resolver): void {
     resolver
       .getHook('resolve')
-      .tapAsync('IgnoreAliasPlugin', (request, resolveContext, callback) => {
+      .tapAsync('IgnoreAliasPlugin', (request, _resolveContext, callback) => {
         const innerRequest = request.request || request.path;
         if (!innerRequest) {
           return callback();
@@ -38,8 +38,9 @@ class IgnoreAliasPlugin implements ResolvePluginInstance {
   }
 }
 
-const config = getWebpackConfig('server', {
+const config = getWebpackConfig({
   target: 'node',
+  project: 'server',
   entry: async () => {
     const rootPath = path.join(paths.server, 'serverless');
     const files = await glob(path.join(rootPath, '**/*.ts'));

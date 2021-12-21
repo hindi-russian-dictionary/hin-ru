@@ -1,38 +1,45 @@
 import React from 'react';
 import {
   MutationFunction,
-  MutationOptions,
   useMutation,
+  UseMutationOptions,
   UseMutationResult,
   useQueryClient,
 } from 'react-query';
 
-import {database} from 'client/lib/db';
 import {getArticleGroupKey, GroupResult} from 'client/utils/query-utils';
-import {useFirestore} from 'client/hooks/use-firestore';
+import {useUser} from 'client/hooks/auth/use-user';
+import {useMutateApi} from 'client/hooks/api/use-mutate-api';
 
-type LocalMutationResult = UseMutationResult<
+type LocalUseMutationResult = UseMutationResult<
   void,
   unknown,
   string,
   GroupResult
 >;
-type LocalMutationOptions = MutationOptions<void, unknown, string, GroupResult>;
+type LocalUseMutationOptions = UseMutationOptions<
+  void,
+  unknown,
+  string,
+  GroupResult
+>;
 type LocalMutationFunction = MutationFunction<void, string>;
 
-export const useDeleteArticle = (word: string): LocalMutationResult => {
+export const useDeleteArticle = (word: string): LocalUseMutationResult => {
   const queryClient = useQueryClient();
-  const firestore = useFirestore();
-  const wordKey = getArticleGroupKey(word);
-  const removeArticle = React.useCallback<LocalMutationFunction>(
-    async (id) => {
-      await database.removeArticle(firestore, id);
-    },
-    [firestore]
+  const {token} = useUser();
+  const wordKey = getArticleGroupKey(word, token);
+  const getUrl = React.useCallback(
+    ({context: id}) => `/api/articles/remove/${id!}`,
+    []
   );
-  const onMutate = React.useCallback<
-    NonNullable<LocalMutationOptions['onMutate']>
-  >(
+  const mutationFn: LocalMutationFunction = useMutateApi<void, string>({
+    token,
+    url: getUrl,
+    method: 'DELETE',
+    skipBody: true,
+  });
+  const onMutate: LocalUseMutationOptions['onMutate'] = React.useCallback(
     async (removedId) => {
       await queryClient.cancelQueries(wordKey);
       const snapshot = queryClient.getQueryData<GroupResult>(wordKey);
@@ -55,19 +62,16 @@ export const useDeleteArticle = (word: string): LocalMutationResult => {
     },
     [queryClient, wordKey]
   );
-  const onError = React.useCallback<
-    NonNullable<LocalMutationOptions['onError']>
-  >(
+  const onError: LocalUseMutationOptions['onError'] = React.useCallback(
     (_err, _removedId, snapshot) => {
       queryClient.setQueryData<GroupResult>(wordKey, snapshot);
     },
     [queryClient, wordKey]
   );
-  const onSettled = React.useCallback<
-    NonNullable<LocalMutationOptions['onSettled']>
-  >(() => {
-    queryClient.invalidateQueries(wordKey);
-  }, [queryClient, wordKey]);
+  const onSettled: LocalUseMutationOptions['onSettled'] =
+    React.useCallback(() => {
+      void queryClient.invalidateQueries(wordKey);
+    }, [queryClient, wordKey]);
 
-  return useMutation(removeArticle, {onMutate, onError, onSettled});
+  return useMutation(mutationFn, {onMutate, onError, onSettled});
 };

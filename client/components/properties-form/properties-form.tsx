@@ -1,10 +1,7 @@
 import React from 'react';
 
-import {
-  PartOfSpeech,
-  PARTS_OF_SPEECH_PROPERTIES,
-} from 'client/utils/parts-of-speech';
-import {Article} from 'client/lib/db';
+import {PARTS_OF_SPEECH_PROPERTIES} from 'client/utils/parts-of-speech';
+import {PartOfSpeech, Article} from 'client/types/db';
 
 type Props = {
   partOfSpeech: PartOfSpeech;

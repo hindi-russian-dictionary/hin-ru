@@ -1,4 +1,6 @@
 import React from 'react';
+import {getAuth, Auth} from '@firebase/auth';
+
 import {
   FirebaseApp,
   FirebaseOptions,
@@ -6,12 +8,16 @@ import {
   initializeApp,
 } from '@firebase/app';
 
-export const useFirebaseApp = () => {
-  const [config] = React.useState<FirebaseOptions>(() => {
+export const useAuth = (): Auth => {
+  const [app] = React.useState<FirebaseApp>(() => {
+    const apps = getApps();
+    if (apps.length !== 0) {
+      return apps[0];
+    }
     if (!process.env.FIREBASE_API_KEY) {
       throw new Error('No Firebase config found!');
     }
-    return {
+    const config: FirebaseOptions = {
       apiKey: process.env.FIREBASE_API_KEY,
       authDomain: process.env.FIREBASE_AUTH_DOMAIN,
       databaseURL: process.env.FIREBASE_DATABASE_URL,
@@ -21,13 +27,7 @@ export const useFirebaseApp = () => {
       appId: process.env.FIREBASE_APP_ID,
       measurementId: process.env.FIREBASE_MEASUREMENT_ID,
     };
-  });
-  const [app] = React.useState<FirebaseApp>(() => {
-    const apps = getApps();
-    if (apps.length !== 0) {
-      return apps[0];
-    }
     return initializeApp(config);
   });
-  return app;
+  return React.useState(() => getAuth(app))[0];
 };

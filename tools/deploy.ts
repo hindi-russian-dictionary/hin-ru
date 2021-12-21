@@ -170,7 +170,7 @@ function updateFunction(params: UpdateFunctionParams): Listr<DeployContext> {
         resources.setMemory(128 * MiB);
         // TODO: https://github.com/vitalets/yandex-cloud-lite/issues/1
         const executionTimeout = new Duration();
-        executionTimeout.setSeconds(1);
+        executionTimeout.setSeconds(5);
         const fnContent = await promisifiedReadFile(
           path.join(params.outputPath, params.fn.filename)
         );
@@ -252,6 +252,7 @@ function updateFunctions(params: UpdateFunctionsParams): Listr<DeployContext> {
     {
       title: 'Verify previous functions',
       task: async (ctx) => {
+        debugger;
         const functionList = (
           await client.list({
             folderId: params.folderId,
@@ -517,9 +518,7 @@ function updateStorage(params: UpdateStorageParams): Listr<DeployContext> {
         const filesToRemove = remoteMd5Map
           .filter(
             ({name: remoteName}) =>
-              !localMd5Map.some(
-                ({name: localName}) => localName === remoteName
-              )
+              !localMd5Map.some(({name: localName}) => localName === remoteName)
           )
           .map(({name}) => name);
         const changedFiles = localMd5Map
@@ -547,9 +546,7 @@ function updateStorage(params: UpdateStorageParams): Listr<DeployContext> {
             ...filesToAdd.map((fileToAdd) => ({
               title: `Add file "${fileToAdd}"`,
               task: async (_, task) => {
-                const match = localMd5Map.find(
-                  ({name}) => name === fileToAdd
-                )!;
+                const match = localMd5Map.find(({name}) => name === fileToAdd)!;
                 await s3Provider
                   .putObject({
                     Bucket: params.bucket,
@@ -748,6 +745,8 @@ async function getServerWebpack(): Promise<ServerWebpackResult> {
         filename: mainChunk,
         hash: chunkHashes.join(';'),
         externalModuleIds: Array.from(new Set(externalModuleIds)),
+        // TODO: сделать правильно
+        methods: ['GET'],
       };
     }
   );

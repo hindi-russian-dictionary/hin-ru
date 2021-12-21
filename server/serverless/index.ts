@@ -1,3 +1,4 @@
+import {StatusCodes} from 'http-status-codes';
 import {Manifest} from 'webpack-manifest-plugin';
 import crossFetch from 'cross-fetch';
 
@@ -37,7 +38,7 @@ export const handler: ServerlessHandler = async (event) => {
     mode,
   });
   return {
-    statusCode: 200,
+    statusCode: StatusCodes.OK,
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
     },

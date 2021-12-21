@@ -18,6 +18,7 @@ export type ObjectStorageIntegration = {
 };
 
 export type ServerlessFunctionIntegration = {
+  type: 'cloud_functions';
   function_id: string;
   tag?: string;
   service_account_id?: string;
@@ -43,12 +44,15 @@ export type GatewayExtension = {
 
 export type GatewayApiDocument = OpenAPIV3.Document<GatewayExtension>;
 export type GatewayApiPaths = OpenAPIV3.PathsObject<GatewayExtension>;
+export type GatewayOperationObject =
+  OpenAPIV3.OperationObject<GatewayExtension>;
 
 export type ServerlessFunctionDescription = {
   path: string;
   filename: string;
   hash: string;
   externalModuleIds: string[];
+  methods: string[];
 };
 
 export type ServerlessFunctionDescriptionWithId =

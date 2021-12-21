@@ -1,9 +1,11 @@
 import * as webpack from 'webpack';
 import * as ts from 'typescript';
+import * as path from 'path';
 import {WebpackManifestPlugin} from 'webpack-manifest-plugin';
 import {StatsWriterPlugin} from 'webpack-stats-plugin';
 
 import {mode, Mode} from 'server/lib/mode';
+import {paths} from 'server/lib/paths';
 
 type Config = {
   target: 'web' | 'node';
@@ -11,15 +13,15 @@ type Config = {
     | ts.TransformerFactory<ts.SourceFile>
     | undefined
   )[];
+  project: string;
   compilerOptions?: ts.CompilerOptions;
 } & Omit<Partial<webpack.Configuration>, 'target' | 'mode'>;
 type ConfigOrConfigFn = Config | ((mode: Mode) => Config);
 
 export const getWebpackConfig = (
-  entryName: string,
   configOrConfigFn: ConfigOrConfigFn
 ): webpack.Configuration => {
-  const {customBeforeTransformers, compilerOptions, ...config} =
+  const {customBeforeTransformers, compilerOptions, project, ...config} =
     typeof configOrConfigFn === 'function'
       ? configOrConfigFn(mode)
       : configOrConfigFn;
@@ -72,6 +74,10 @@ export const getWebpackConfig = (
     ],
     cache: {
       type: 'filesystem',
+      cacheDirectory: path.join(
+        paths.root,
+        `node_modules/.cache/webpack/${project}`
+      ),
     },
   };
 };

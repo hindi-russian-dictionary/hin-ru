@@ -32,6 +32,8 @@
 
 Ключ в виде json-файла с именем `.auth-key.deploy.json` должен лежать в корне проекта, пример файла можно посмотреть по имени `.auth-key.deploy.example.json`.
 
+Также требуется сгенерировать ключ для доступа к БД firebase. Для этого требуется перейти в консоль `https://console.firebase.google.com/project/hin-ru/settings/serviceaccounts/adminsdk`, нажать `Generate new private key` во вкладке `Firebase Admin SDK` и сохранить ключ как `.firebase-credentials.json` в корне проекта, пример файла можно посмотреть в `.firebase-credentials.example.json`.
+
 ### Деплой
 
 `npm run deploy`
@@ -73,6 +75,8 @@ Also, you need an auth key to performs actions on behalf of service account, you
 `yc iam key create --service-account-id abcd1234abcd1234abcd -o .auth-key.deploy.json`
 
 JSON file named `.auth-key.deploy.json` should be places in root directory of the project, example file is named `.auth-key.deploy.example.json`.
+
+Also, you need an auth key for firebase DB. To get it open `https://console.firebase.google.com/project/hin-ru/settings/serviceaccounts/adminsdk`, press `Generate new private key` in tab `Firebase Admin SDK` ans save key as `.firebase-credentials.json` in project root, example file is named `.firebase-credentials.example.json`
 
 ### Deploy
 

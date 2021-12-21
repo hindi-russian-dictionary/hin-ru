@@ -1,16 +1,16 @@
 import React from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 
-import {Article} from 'client/lib/db';
-import {PARTS_OF_SPEECH, PartOfSpeech} from 'client/utils/parts-of-speech';
+import {PartOfSpeech, Article} from 'client/types/db';
+import {PARTS_OF_SPEECH} from 'client/utils/parts-of-speech';
 import {DevanagariTextInput} from 'client/components/devangari-text-input/devangari-text-input';
 import {PropertiesForm} from 'client/components/properties-form/properties-form';
 import {MeaningsForm} from 'client/components/meanings-form/meanings-form';
-import {useUserControls} from 'client/hooks/use-user-controls';
-import {useArticleGroup} from 'client/hooks/use-article-group';
-import {useAddArticle} from 'client/hooks/use-add-article';
+import {useUser} from 'client/hooks/auth/use-user';
+import {useGetArticles} from 'client/hooks/articles/use-get-articles';
+import {useAddArticle} from 'client/hooks/articles/use-add-article';
 import {getNextValue} from 'client/utils/react-utils';
-import {useMutateArticle} from 'client/hooks/use-mutate-article';
+import {useMutateArticle} from 'client/hooks/articles/use-mutate-article';
 
 const getEmptyArticle = (): Article => ({
   id: 'temporary',
@@ -45,14 +45,14 @@ export const WordAddForm: React.FC = () => {
 
   const params = useParams<'word' | 'id'>();
   const word = params.word || '';
-  const articleGroupQuery = useArticleGroup(word);
+  const articleGroupQuery = useGetArticles(word);
   const articleMutation = useMutateArticle(word);
   const selectedArticle = articleGroupQuery.data?.find(
     (article) => article.id === params.id
   );
   const addArticleMutation = useAddArticle();
 
-  const {user} = useUserControls();
+  const {userName} = useUser();
 
   const [localArticle, setLocalArticle] = React.useState<Article>(
     selectedArticle || getEmptyArticle()
@@ -121,6 +121,7 @@ export const WordAddForm: React.FC = () => {
         articleMutation.mutate({
           ...localArticle,
           word: trimmedWord,
+          id: localArticle.id!,
         });
       } else {
         if (localArticle.word.length === 0) {
@@ -129,7 +130,6 @@ export const WordAddForm: React.FC = () => {
         addArticleMutation.mutate({
           ...localArticle,
           word: trimmedWord,
-          author: user?.email || undefined,
         });
       }
       openArticlePage(trimmedWord);
@@ -140,7 +140,6 @@ export const WordAddForm: React.FC = () => {
       addArticleMutation,
       localArticle,
       openArticlePage,
-      user,
       isLoading,
     ]
   );
@@ -337,10 +336,14 @@ export const WordAddForm: React.FC = () => {
               className={
                 'btn btn-outline-primary' + (isLoading ? ' disabled' : '')
               }
-              disabled={isLoading}
+              disabled={isLoading || !userName}
               type="submit"
             >
-              {isLoading ? 'Загружается..' : 'Отправить'}
+              {userName
+                ? isLoading
+                  ? 'Загружается..'
+                  : 'Отправить'
+                : 'Залогиньтесь чтобы добавлять слова'}
             </button>
             {error ? (
               <div>

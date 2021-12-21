@@ -1,23 +1,24 @@
 import React from 'react';
 import {
   MutationFunction,
-  MutationOptions,
   useMutation,
+  UseMutationOptions,
   UseMutationResult,
   useQueryClient,
 } from 'react-query';
 
-import {database, PartialArticle} from 'client/lib/db';
+import {PartialArticle} from 'client/types/db';
 import {getArticleGroupKey, GroupResult} from 'client/utils/query-utils';
-import {useFirestore} from 'client/hooks/use-firestore';
+import {useUser} from 'client/hooks/auth/use-user';
+import {useMutateApi} from 'client/hooks/api/use-mutate-api';
 
-type LocalMutationResult = UseMutationResult<
+type LocalUseMutationResult = UseMutationResult<
   void,
   unknown,
   PartialArticle,
   GroupResult
 >;
-type LocalMutationOptions = MutationOptions<
+type LocalUseMutationOptions = UseMutationOptions<
   void,
   unknown,
   PartialArticle,
@@ -25,19 +26,15 @@ type LocalMutationOptions = MutationOptions<
 >;
 type LocalMutationFunction = MutationFunction<void, PartialArticle>;
 
-export const useMutateArticle = (word: string): LocalMutationResult => {
+export const useMutateArticle = (word: string): LocalUseMutationResult => {
   const queryClient = useQueryClient();
-  const firestore = useFirestore();
-  const wordKey = getArticleGroupKey(word);
-  const mutateArticle = React.useCallback<LocalMutationFunction>(
-    async (article) => {
-      await database.updateArticle(firestore, article);
-    },
-    [firestore]
-  );
-  const onMutate = React.useCallback<
-    NonNullable<LocalMutationOptions['onMutate']>
-  >(
+  const {token} = useUser();
+  const wordKey = getArticleGroupKey(word, token);
+  const mutationFn: LocalMutationFunction = useMutateApi<void, PartialArticle>({
+    token,
+    url: '/api/articles/update/',
+  });
+  const onMutate: LocalUseMutationOptions['onMutate'] = React.useCallback(
     async (updatedArticle) => {
       await queryClient.cancelQueries(wordKey);
       const snapshot = queryClient.getQueryData<GroupResult>(wordKey);
@@ -64,19 +61,16 @@ export const useMutateArticle = (word: string): LocalMutationResult => {
     },
     [queryClient, wordKey]
   );
-  const onError = React.useCallback<
-    NonNullable<LocalMutationOptions['onError']>
-  >(
+  const onError: LocalUseMutationOptions['onError'] = React.useCallback(
     (_err, _article, snapshot) => {
       queryClient.setQueryData<GroupResult>(wordKey, snapshot);
     },
     [queryClient, wordKey]
   );
-  const onSettled = React.useCallback<
-    NonNullable<LocalMutationOptions['onSettled']>
-  >(() => {
-    queryClient.invalidateQueries(wordKey);
-  }, [queryClient, wordKey]);
+  const onSettled: LocalUseMutationOptions['onSettled'] =
+    React.useCallback(() => {
+      void queryClient.invalidateQueries(wordKey);
+    }, [queryClient, wordKey]);
 
-  return useMutation(mutateArticle, {onMutate, onError, onSettled});
+  return useMutation(mutationFn, {onMutate, onError, onSettled});
 };

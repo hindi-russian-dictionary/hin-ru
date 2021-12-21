@@ -1,131 +1,56 @@
-import {URL} from 'url';
-import express, {RequestHandler} from 'express';
+import express from 'express';
+import util from 'util';
+import path from 'path';
+import * as fsWalk from '@nodelib/fs.walk';
 
-import {handler as indexHandler} from 'server/serverless';
-import {handler as pingHandler} from 'server/serverless/ping';
-import {HttpMethod, ServerlessHandler} from 'server/types/serverless';
+import {ServerlessModule} from 'server/types/serverless';
+import {paths} from 'server/lib/paths';
+import {convertHandlerToMiddleware} from 'server/utils/express-serverless';
 
 const app = express();
 // Не тратим силы на парсинг query, которую не будем использовать
 app.set('query parser', false);
+app.use(express.json());
 
-type Entry<T> = [keyof T, T[keyof T]];
-const remapValues = <T, E>(
-  obj: T,
-  mapper: (entry: Entry<T>, index: number, entries: Entry<T>[]) => Entry<E>
-): E => {
-  return Object.fromEntries(
-    Object.entries(obj).map(mapper as any)
-  ) as unknown as E;
+const promisifiedWalk = util.promisify(fsWalk.walk);
+
+let routesApplied = false;
+const applyRoutes = async () => {
+  if (routesApplied) {
+    return;
+  }
+  const serverlessDir = path.join(paths.server, 'serverless');
+  const entries = await promisifiedWalk(serverlessDir);
+  const handlers = entries
+    .filter((entry) => entry.dirent.isFile())
+    .map((entry) => {
+      const module = require(entry.path) as ServerlessModule;
+      const extname = path.extname(entry.name);
+      const relativeName = path
+        .relative(serverlessDir, entry.path)
+        .slice(0, -extname.length);
+      return {
+        path: relativeName === 'index' ? '*' : `/${relativeName}/`,
+        module,
+      };
+    })
+    .sort((a, b) => {
+      // '*' goes last
+      if (a.path === '*') {
+        return 1;
+      }
+      if (b.path === '*') {
+        return -1;
+      }
+      return 0;
+    });
+  handlers.forEach(({path, module}) => {
+    app.all(path + '?*', convertHandlerToMiddleware(path, module.handler));
+  });
+  routesApplied = true;
 };
 
-const convertHandlerToMiddleware = (
-  handler: ServerlessHandler
-): RequestHandler => {
-  return async (req, res) => {
-    const parsedUrl = new URL('http://localhost' + req.originalUrl);
-
-    const parsedHeaders = req.rawHeaders
-      .reduce<[string, string][]>((headerTuples, line, index) => {
-        if (index % 2 === 0) {
-          headerTuples.push([line, '']);
-        } else {
-          headerTuples[headerTuples.length - 1][1] = line;
-        }
-        return headerTuples;
-      }, [])
-      .reduce<Record<string, string[]>>(
-        (parsedHeaders, [[keyFirst, ...keyRest], value]) => {
-          const key = keyFirst.toUpperCase() + keyRest.join('');
-          if (!parsedHeaders[key]) {
-            parsedHeaders[key] = [];
-          }
-          parsedHeaders[key].push(value);
-          return parsedHeaders;
-        },
-        {}
-      );
-    // Так в Облаке
-    delete parsedHeaders['User-Agent'];
-    if (!parsedHeaders['Content-Length']) {
-      parsedHeaders['Content-Length'] = ['0'];
-    }
-
-    const parsedQuery = [...parsedUrl.searchParams].reduce<
-      Record<string, string[]>
-    >((parsedQuery, [key, value]) => {
-      if (!parsedQuery[key]) {
-        parsedQuery[key] = [];
-      }
-      parsedQuery[key].push(value);
-      return parsedQuery;
-    }, {});
-
-    const httpMethod = req.method as HttpMethod;
-
-    const result = await handler(
-      {
-        httpMethod,
-        url: req.originalUrl,
-        params: {
-          // Только потому что такого формата у нас OpenAPI
-          path: req.path.slice(1),
-        },
-        multiValueParams: {
-          // Только потому что такого формата у нас OpenAPI
-          path: [req.path.slice(1)],
-        },
-        pathParams: {
-          path: req.path.slice(1),
-        },
-        path: req.baseUrl + '/{path+}',
-        headers: remapValues(parsedHeaders, ([key, values]) => [
-          key,
-          values[values.length - 1],
-        ]),
-        multiValueHeaders: parsedHeaders,
-        queryStringParameters: remapValues(parsedQuery, ([key, values]) => [
-          key,
-          values[values.length - 1],
-        ]),
-        multiValueQueryStringParameters: parsedQuery,
-        requestContext: {
-          identity: {
-            sourceIp: req.ip,
-            userAgent: req.headers['user-agent'] || 'unknown',
-          },
-          httpMethod,
-          requestId: 'local-req-id',
-          requestTime: '10/Nov/2021:00:00:00 +0000',
-          requestTimeEpoch: 1636504946,
-        },
-        body: req.body || '',
-        isBase64Encoded: true,
-        locals: res.locals,
-      },
-      {
-        awsRequestId: 'local-req-id',
-        requestId: 'local-req-id',
-        invokedFunctionArn: 'local-fn-name',
-        functionName: 'local-fn-name',
-        functionVersion: 'local-version-name',
-        memoryLimitInMB: '128',
-        deadlineMs: Date.now() + 5000,
-        logGroupName: 'local-group-name',
-        getRemainingTimeInMillis: () => 5000,
-        getPayload: () => '',
-      }
-    );
-    if (result.headers) {
-      Object.entries(result.headers).forEach(([key, value]) => {
-        res.setHeader(key, value);
-      });
-    }
-    res.status(result.statusCode).send(result.body);
-  };
+export const getApp = async () => {
+  await applyRoutes();
+  return app;
 };
-
-app.use('/ping/', convertHandlerToMiddleware(pingHandler));
-app.all('*', convertHandlerToMiddleware(indexHandler));
-
-export {app};

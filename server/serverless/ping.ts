@@ -1,8 +1,10 @@
+import {StatusCodes} from 'http-status-codes';
+
 import {ServerlessHandler} from 'server/types/serverless';
 
 export const handler: ServerlessHandler = async () => {
   return {
-    statusCode: 200,
+    statusCode: StatusCodes.OK,
     body: 'pong',
   };
 };

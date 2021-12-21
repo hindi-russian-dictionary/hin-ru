@@ -1,7 +1,7 @@
 import React from 'react';
 import {Link, useSearchParams} from 'react-router-dom';
 
-import {useLookupArticles} from 'client/hooks/use-lookup-articles';
+import {useLookupArticles} from 'client/hooks/articles/use-lookup-articles';
 import {PARTS_OF_SPEECH} from 'client/utils/parts-of-speech';
 import {useSyncSearchQuery} from 'client/hooks/use-sync-search-query';
 

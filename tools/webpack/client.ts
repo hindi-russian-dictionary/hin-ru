@@ -8,10 +8,11 @@ import {getWebpackConfig} from 'tools/webpack/get-webpack-config';
 import {paths} from 'server/lib/paths';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 
-const config = getWebpackConfig('client', (mode) => {
+const config = getWebpackConfig((mode) => {
   const isProduction = mode === 'production';
   return {
     target: 'web',
+    project: 'client',
     entry: [
       isProduction ? undefined : 'webpack-hot-middleware/client',
       './client/index.tsx',

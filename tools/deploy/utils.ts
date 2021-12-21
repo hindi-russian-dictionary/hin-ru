@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import {
   GatewayApiDocument,
   GatewayApiPaths,
+  GatewayOperationObject,
   ServerlessFunctionDescription,
   ServerlessFunctionDescriptionWithId,
 } from 'tools/deploy/types';
@@ -59,29 +60,34 @@ export const getGatewayConfig = (
           },
         };
       }
-      acc[`/${isIndex ? '' : `${fn.path}/`}{path+}`] = {
-        get: {
-          'x-yc-apigateway-integration': {
-            type: 'cloud_functions',
-            function_id: fn.id,
-            tag: fn.tag,
-            service_account_id: params.functions.serviceAccountId,
-            context,
-          },
-          operationId: fn.path,
-          parameters: [
-            {
-              explode: false,
-              in: 'path',
-              name: 'path',
-              required: false,
-              style: 'simple',
-            },
-          ],
-          responses: {},
-          summary: `Function ${fn.path}`,
+      const getOperationObject = (method: string): GatewayOperationObject => ({
+        'x-yc-apigateway-integration': {
+          type: 'cloud_functions',
+          function_id: fn.id,
+          tag: fn.tag,
+          service_account_id: params.functions.serviceAccountId,
+          context,
         },
-      };
+        operationId: fn.path,
+        parameters: [
+          {
+            explode: false,
+            in: 'path',
+            name: 'path',
+            required: false,
+            style: 'simple',
+          },
+        ],
+        responses: {},
+        summary: `Function ${fn.path} on "${method}" handler`,
+      });
+      acc[`/${isIndex ? '' : `${fn.path}/`}{path+}`] = fn.methods.reduce(
+        (acc, method) => ({
+          ...acc,
+          [method.toLowerCase()]: getOperationObject(method),
+        }),
+        {}
+      );
       return acc;
     },
     {}

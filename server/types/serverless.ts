@@ -1,3 +1,5 @@
+import {StatusCodes} from 'http-status-codes';
+
 export type HttpMethod =
   | 'GET'
   | 'POST'
@@ -22,19 +24,19 @@ export type RequestContext = {
   };
 };
 
-export type ServerlessEvent = {
+export type ServerlessEvent<T = unknown> = {
   httpMethod: HttpMethod;
   url: string;
-  params: Record<string, string>;
+  params: Partial<Record<string, string>>;
   multiValueParams: Record<string, string[]>;
   path?: string;
   pathParams: unknown;
-  headers: Record<string, string>;
+  headers: Partial<Record<string, string>>;
   multiValueHeaders: Record<string, string[]>;
-  queryStringParameters: Record<string, string>;
+  queryStringParameters: Partial<Record<string, string>>;
   multiValueQueryStringParameters: Record<string, string[]>;
   requestContext: RequestContext;
-  body: string;
+  body: T;
   isBase64Encoded: boolean;
   // Только в окружении express
   locals?: any;
@@ -59,7 +61,7 @@ export type ServerlessContext = {
 };
 
 export type ServerlessResponse = {
-  statusCode: number;
+  statusCode: StatusCodes;
   headers?: Record<string, string>;
   multiValueHeaders?: Record<string, string[]>;
   body?: string;
@@ -70,3 +72,7 @@ export type ServerlessHandler = (
   event: ServerlessEvent,
   context: ServerlessContext
 ) => ServerlessResponse | Promise<ServerlessResponse>;
+
+export type ServerlessModule = {
+  handler: ServerlessHandler;
+};

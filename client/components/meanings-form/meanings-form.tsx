@@ -1,6 +1,6 @@
 import React from 'react';
 
-import {Article} from 'client/lib/db';
+import {Article} from 'client/types/db';
 import {updateAtArray} from 'client/utils/array-utils';
 import {getNextValue} from 'client/utils/react-utils';
 
@@ -31,10 +31,7 @@ export const MeaningsForm: React.FC<Props> = (props) => {
     (value: string, index: number) => void
   >(
     (value, index) => {
-      updateMeaning(
-        (prevMeaning) => ({...prevMeaning, meaning: value}),
-        index
-      );
+      updateMeaning((prevMeaning) => ({...prevMeaning, meaning: value}), index);
     },
     [updateMeaning]
   );

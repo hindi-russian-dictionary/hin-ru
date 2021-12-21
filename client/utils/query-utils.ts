@@ -1,15 +1,22 @@
 import {QueryKey} from 'react-query';
-import {Article} from 'client/lib/db';
+import {Article} from 'client/types/db';
 
 export type GroupResult = Article[] | undefined;
 
-export const getArticleGroupKey = (word: string): QueryKey => {
-  return ['articleGroup', word];
+export const getArticleGroupKey = (
+  word: string,
+  token?: string | null
+): QueryKey => {
+  return ['articleGroup', word, token || null];
 };
 
 export const getLookupArticleGroupKey = (
   term: string,
-  isUserAdmin: boolean
+  token?: string | null
 ): QueryKey => {
-  return ['lookupArticles', term, isUserAdmin];
+  return ['lookupArticles', term, token || null];
+};
+
+export const getUserAdminKey = (token?: string | null): QueryKey => {
+  return ['isUserAdmin', token || null];
 };

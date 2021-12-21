@@ -49,8 +49,9 @@ app.use((req, res, next) => {
 });
 
 app.use(async (req, res, next) => {
-  const appModule = await import(entryPointPath);
-  appModule.app(req, res, next);
+  const {getApp} = await import(entryPointPath);
+  const app = await getApp();
+  app(req, res, next);
 });
 
 setCleanupWatcher(paths.server, paths.root, entryPointPath);

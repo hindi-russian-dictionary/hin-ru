@@ -1,15 +1,4 @@
-export type PartOfSpeech =
-  | 'noun'
-  | 'verb'
-  | 'compound_verb'
-  | 'adjective'
-  | 'adverb'
-  | 'pronoun'
-  | 'conjunction'
-  | 'interjection'
-  | 'postposition'
-  | 'particle'
-  | 'numeral';
+import {PartOfSpeech} from 'client/types/db';
 
 type PartOfSpeechPropertyValue = {
   key: string;
